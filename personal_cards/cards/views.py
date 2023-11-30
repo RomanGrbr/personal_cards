@@ -1,3 +1,9 @@
 from django.shortcuts import render
 
-# Create your views here.
+from .forms import CardForm
+
+
+def index(request):
+    template = 'index.html'
+    context = {'form': CardForm}
+    return render(request, template, context)
