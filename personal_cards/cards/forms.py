@@ -3,6 +3,41 @@ from django import forms
 from .models import Card
 
 
+FORM_TYPES = {
+    'BooleanField': forms.BooleanField(),
+    'CharField': forms.CharField(),
+    'ChoiceField': forms.ChoiceField(),
+    'DateField': forms.DateField(),
+    'DateTimeField': forms.DateTimeField(),
+    'DecimalField': forms.DecimalField(),
+    'DurationField': forms.DurationField(),
+    'EmailField': forms.EmailField(),
+    'FileField': forms.FileField(
+        # widget=forms.ClearableFileInput(attrs={'multiple': True})
+    ),
+    # 'FilePathField': forms.FilePathField(),
+    'FloatField': forms.FloatField(),
+    'GenericIPAddressField': forms.GenericIPAddressField,
+    'ImageField': forms.ImageField(
+        # widget=forms.ClearableFileInput(attrs={'multiple': True})
+    ),
+    'IntegerField': forms.IntegerField(),
+    'MultipleChoiceField': forms.MultipleChoiceField(),
+    'NullBooleanField': forms.NullBooleanField(),
+    # 'RegexField': forms.RegexField(),
+    'SlugField': forms.SlugField(),
+    'TimeField': forms.TimeField(),
+    'TypedChoiceField': forms.TypedChoiceField(),
+    'TypedMultipleChoiceField': forms.TypedMultipleChoiceField(),
+    'URLField': forms.URLField(),
+    'UUIDField': forms.UUIDField(),
+}
+
+
+class PersonForm(forms.Form):
+    name = forms.CharField(label='Имя')
+
+
 class AttrValueForm(forms.Form):
     company = forms.CharField(label='Компания')
 
