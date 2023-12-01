@@ -1,9 +1,30 @@
 {% extends "base.html" %}
 {% block title %}
-  Лента записей
+  Персональные карточки
 {% endblock %}
 {% block content %}
-  <table>
-      {{ form }}
-  </table>
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table>
+        {% for form in formset %}
+        <tr><td>{{ form }}</td></tr>
+        {% endfor %}
+    </table>
+    <input type="hidden" value="false" name="additems" id="additems">
+    <button class="btn btn-primary" id="additemsbutton">Добавить запись</button>
+    <input type="submit" value="Отправить" class="btn btn-primary">
+  </form>
+<script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+<script>
+    $(document).ready(function() {
+      $("#additemsbutton").on('click',function(event) {
+        $("#additems").val("true");
+      });
+  });
+</script>
 {% endblock %}
