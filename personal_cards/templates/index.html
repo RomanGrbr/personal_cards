@@ -7,7 +7,13 @@
     {% csrf_token %}
     {{ formset.management_form }}
     <table>
-        {{ formset }}
+        {% for form in formset %}
+        <tr>
+            <td>
+                {{ form }}
+            </td>
+        </tr>
+        {% endfor %}
     </table>
     <input type="hidden" value="false" name="additems" id="additems">
     <button class="btn btn-primary" id="additemsbutton">Добавить запись</button>
