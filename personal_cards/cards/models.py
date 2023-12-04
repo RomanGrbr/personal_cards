@@ -27,6 +27,7 @@ class Attribute(models.Model):
         'Название поля (label)', max_length=MAX_LENGTH)
     help_text = models.CharField(
         'Текст подсказка (help_text)', max_length=MAX_LENGTH)
+    is_uniq = models.BooleanField('Уникальность поля', default=False)
 
     class Meta:
         verbose_name = 'атрибут'
