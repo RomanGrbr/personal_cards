@@ -14,10 +14,16 @@
     </title>
   </head>
   <body>
+  <div>
+    <a href="{% url 'cards:index' %}">На главную</a>
+  </div>
     <main>
       <div class="container py-5">
         {% block content %}{% endblock %}
       </div>
     </main>
+  <div>
+    <a href="{% url 'cards:new_card' %}">Создать новую карточку</a>
+  </div>
   </body>
 </html>

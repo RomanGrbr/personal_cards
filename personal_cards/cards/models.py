@@ -18,7 +18,8 @@ class AttributeType(models.Model):
 
 
 class Attribute(models.Model):
-    field_name = models.CharField('Имя поля', max_length=MAX_LENGTH)
+    field_name = models.CharField(
+        'Имя поля', max_length=MAX_LENGTH, unique=True)
     attr_type = models.ForeignKey(
         AttributeType, on_delete=models.PROTECT, related_name='attributes',
         verbose_name='Тип атрибута (поля)'
@@ -66,4 +67,4 @@ class CardAttribute(models.Model):
 
     def __str__(self):
         return '{} - {} - {}'.format(
-            self.id_attribute, self.id_card, self.value)
+            self.id_card, self.id_attribute, self.value)

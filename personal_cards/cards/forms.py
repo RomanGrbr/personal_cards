@@ -2,7 +2,8 @@ from django import forms
 from django.forms import ValidationError
 from django.forms import ClearableFileInput, FileField
 from django.core.validators import validate_image_file_extension
-from .models import Card
+
+from .models import Card, CardAttribute
 
 
 FORM_TYPES = {
@@ -42,9 +43,11 @@ class CardForm(forms.Form):
         for field in extra:
             try:
                 self.fields[field.field_name] = FORM_TYPES[
-                    field.attr_type.attr_type](
+                    getattr(field.attr_type, 'attr_type', field.attr_type)](
                     label=field.label,
-                    help_text=field.help_text
+                    help_text=field.help_text,
+                    required=False,
+                    initial=getattr(field, 'value', None)
                 )
             except KeyError:
                 raise ValidationError(
@@ -55,11 +58,11 @@ class CardForm(forms.Form):
                     '{} - {}'.format(
                         'Ошибка связанная с ', err))
             self.fields[field.field_name].widget.attrs['is_uniq'] = str(
-                field.is_uniq).lower
+                getattr(field, 'is_uniq')).lower
             self.fields[field.field_name].widget.attrs['attr_type'] = str(
-                field.attr_type)
+                getattr(field, 'attr_type'))
+            # self.fields[field.field_name].widget.attrs['multiple'] = True
 
     def extra_fields(self):
         for name, value in self.cleaned_data.items():
-            # if name.startswith('custom_'):
             yield self.fields[name].label, value

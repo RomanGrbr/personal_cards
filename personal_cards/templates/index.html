@@ -3,20 +3,20 @@
   Персональные карточки
 {% endblock %}
 {% block content %}
-
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ formset.management_form }}
-    <table>
-      {% for field in form %}
-        <tr>
-          <td>
-            {{ field.label }} {{ field }}
-          </td>
-        </tr>
-      {% endfor %}
-    </table>
-    <input type="submit" value="Отправить" class="btn btn-primary">
-  </form>
-
+  {% for card in cards %}
+    <div>
+      <div>
+        {{ card.name }} - {{ card.last_name }}
+      </div>
+      <div>
+        <a href="{% url 'cards:card_edit' card.id %}">Изменить запись</a>
+      </div>
+      <div>
+        <a href="{% url 'cards:card_delete' card.id %}">Удалить запись</a>
+      </div>
+      {% if not forloop.last %}
+        <hr>
+      {% endif %}
+    </div>
+  {% endfor %}
 {% endblock %}
