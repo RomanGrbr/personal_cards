@@ -18,15 +18,27 @@
     {% csrf_token %}
     {{ formset.management_form }}
     <table>
-      {% for field in form %}
-        <tr>
-          <td>
-            {{ field.label }} {{ field }}
-          </td>
-        </tr>
-      {% endfor %}
+        {% if not "/delete/" in request.path %}
+          {% for field in form %}
+            <tr>
+              <td>
+                {{ field.label }} {{ field }}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          {% for field in form %}
+            {{ field.label }}: {{ field.initial }}<br>
+          {% endfor %}
+        {% endif %}
     </table>
-    <input type="submit" value="Сохранить" class="btn btn-primary">
+    {% if '/edit/' in request.path %}
+      <input type="submit" value="Сохранить изменения" class="btn btn-primary">
+    {% elif "/delete/" in request.path %}
+       <input type="submit" value="Удалить запись" class="btn btn-primary">
+    {% else %}
+     <input type="submit" value="Создать запись" class="btn btn-primary">
+    {% endif %}
   </form>
 
   {% if form.is_valid %}
