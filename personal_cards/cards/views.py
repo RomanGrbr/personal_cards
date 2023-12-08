@@ -7,8 +7,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django import forms
-from django.db.models import F
+from django.db.models import F, Q
 from django.forms.models import model_to_dict
 
 from .forms import CardForm
@@ -49,9 +48,10 @@ def index(request):
 
 
 def card_edit(request, card_id=None):
+    from itertools import chain
     template = 'card.html'
     card = get_object_or_404(Card, pk=card_id)
-    extra = CardAttribute.objects.filter(id_card=card_id).select_related(
+    extra = card.attrs.select_related(
         'id_attribute', 'id_attribute__attr_type'
     ).annotate(
         field_name=F('id_attribute__field_name'),
@@ -60,11 +60,18 @@ def card_edit(request, card_id=None):
         help_text=F('id_attribute__help_text'),
         is_uniq=F('id_attribute__is_uniq')
     )
+    # print(Attribute.objects.all())
+    # print(extra)
+    print(list(chain(Attribute.objects.all(), extra)))
+    cadrd_arrts_before = {attr.id for attr in extra}
+    cadrd_arrts_after = set()
     form = CardForm(request.POST or None, request.FILES or None,
-                    initial=model_to_dict(card), extra=extra)
+                    initial=model_to_dict(card), extra=list(chain(Attribute.objects.all(), extra)))
     context = {
         'form': form,
     }
+    # print('request - {}'.format(request))
+    # print('form - {}'.format(form))
     if request.method == 'POST':
         if form.is_valid():
             for field in Card._meta.fields:
@@ -76,13 +83,26 @@ def card_edit(request, card_id=None):
             for key, value in form.cleaned_data.items():
                 if value:
                     if isinstance(value, InMemoryUploadedFile):
+                        attr_pk = int(form.fields[key].widget.attrs.get('id'))
+                        card_attr = get_object_or_404(CardAttribute,
+                                                      pk=attr_pk)
+                        last_file_folder = card_attr.value
                         file = form.cleaned_data.get(key)
+                        # TODO Теряется изображение
                         value = image_save(file)
-                    card_attribute = card.attrs.select_related(
-                        'id_attribute'
-                    ).get(id_attribute__field_name=key)
-                    card_attribute.value = value
-                    card_attribute.save()
+                        try:
+                            os.remove(last_file_folder)
+                        except Exception as e:
+                            print(e)
+                    attr_pk = int(form.fields[key].widget.attrs.get('id'))
+                    print(attr_pk)
+                    card_attr = get_object_or_404(CardAttribute, pk=attr_pk)
+                    cadrd_arrts_after.add(attr_pk)
+                    card_attr.value = value
+                    card_attr.save()
+            for attr_pk in (cadrd_arrts_before - cadrd_arrts_after):
+                card_attr = get_object_or_404(CardAttribute, pk=attr_pk)
+                card_attr.delete()
             context.update({'form': form})
             return render(request, template, context)
     return render(request, template, context)
@@ -133,6 +153,23 @@ def card_delete(request, card_id):
         'form': form,
     }
     if request.method == 'POST':
+        files = extra.filter(
+            Q(attr_type='FileField') | Q(attr_type='ImageField')
+        )
+        for file in files:
+            try:
+                os.remove(file.value)
+            except Exception as e:
+                print(e)
         card.delete()
         return redirect('cards:index')
     return render(request, template, context)
+
+
+def card_attr_delete(request, field_id):
+    if request.method == 'POST':
+        card_attr = get_object_or_404(CardAttribute, pk=field_id)
+        print(card_attr)
+    return redirect('cards:card_attr_delete')
+
+

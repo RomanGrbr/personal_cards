@@ -61,6 +61,8 @@ class CardForm(forms.Form):
                 getattr(field, 'is_uniq')).lower
             self.fields[field.field_name].widget.attrs['attr_type'] = str(
                 getattr(field, 'attr_type'))
+            self.fields[field.field_name].widget.attrs['id'] = str(
+                getattr(field, 'id'))
             # self.fields[field.field_name].widget.attrs['multiple'] = True
 
     def extra_fields(self):
