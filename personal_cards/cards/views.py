@@ -60,48 +60,55 @@ def card_edit(request, card_id=None):
         help_text=F('id_attribute__help_text'),
         is_uniq=F('id_attribute__is_uniq')
     )
-    # print(Attribute.objects.all())
-    # print(extra)
-    print(list(chain(Attribute.objects.all(), extra)))
-    cadrd_arrts_before = {attr.id for attr in extra}
+    cadrd_arrts_before = {attr.id: attr.field_name for attr in extra}  # Атрибуты до редактирования
+    print('cadrd_arrts_before: {}'.format(cadrd_arrts_before))
     cadrd_arrts_after = set()
     form = CardForm(request.POST or None, request.FILES or None,
                     initial=model_to_dict(card), extra=list(chain(Attribute.objects.all(), extra)))
     context = {
         'form': form,
     }
-    # print('request - {}'.format(request))
-    # print('form - {}'.format(form))
     if request.method == 'POST':
         if form.is_valid():
-            for field in Card._meta.fields:
-                if field.name in form.cleaned_data:
-                    field_value = form.cleaned_data.pop(field.name)
-                    setattr(card, field.name, field_value)
-            card.save()
             card = card_save(form=form, card=card)
             for key, value in form.cleaned_data.items():
+                attr_id = int(form.fields[key].widget.attrs.get('id'))
+                # Если есть значение и id цифра, если id был ранее и имя поля соответствует id
                 if value:
-                    if isinstance(value, InMemoryUploadedFile):
-                        attr_pk = int(form.fields[key].widget.attrs.get('id'))
-                        card_attr = get_object_or_404(CardAttribute,
-                                                      pk=attr_pk)
-                        last_file_folder = card_attr.value
-                        file = form.cleaned_data.get(key)
-                        # TODO Теряется изображение
-                        value = image_save(file)
-                        try:
-                            os.remove(last_file_folder)
-                        except Exception as e:
-                            print(e)
-                    attr_pk = int(form.fields[key].widget.attrs.get('id'))
-                    print(attr_pk)
-                    card_attr = get_object_or_404(CardAttribute, pk=attr_pk)
-                    cadrd_arrts_after.add(attr_pk)
-                    card_attr.value = value
-                    card_attr.save()
-            for attr_pk in (cadrd_arrts_before - cadrd_arrts_after):
-                card_attr = get_object_or_404(CardAttribute, pk=attr_pk)
+                    if (attr_id in cadrd_arrts_before and
+                            cadrd_arrts_before[attr_id] == key
+                    ):
+                        print('Старый ключ: {}'.format(key))
+                        # Тогда перезаписываем значения
+                        if isinstance(value, InMemoryUploadedFile):
+                            card_attr = get_object_or_404(CardAttribute,
+                                                          pk=attr_id)
+                            last_file_folder = card_attr.value
+                            try:
+                                os.remove(last_file_folder)
+                            except Exception as e:
+                                print(e)
+                            finally:
+                                file = form.cleaned_data.get(key)
+                                value = image_save(file)
+                        card_attr = get_object_or_404(CardAttribute, pk=attr_id)
+                        card_attr.value = value
+                        card_attr.save()
+                        cadrd_arrts_after.add(attr_id)
+                    else:
+                        print('Новый ключ: {}'.format(key))
+                        attr = Attribute.objects.filter(field_name=key)
+                        if attr:
+                            if isinstance(value, InMemoryUploadedFile):
+                                file = form.cleaned_data.get(key)
+                                value = image_save(file)
+                            CardAttribute.objects.create(
+                                id_attribute=attr.first(),
+                                id_card=card,
+                                value=value
+                            )
+            for attr_id in (set(cadrd_arrts_before.keys()) - cadrd_arrts_after):
+                card_attr = get_object_or_404(CardAttribute, pk=attr_id)
                 card_attr.delete()
             context.update({'form': form})
             return render(request, template, context)
