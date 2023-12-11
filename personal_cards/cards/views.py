@@ -1,6 +1,7 @@
 import os
 import uuid
 import base64
+from itertools import chain
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -48,7 +49,6 @@ def index(request):
 
 
 def card_edit(request, card_id=None):
-    from itertools import chain
     template = 'card.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card.attrs.select_related(
@@ -60,25 +60,32 @@ def card_edit(request, card_id=None):
         help_text=F('id_attribute__help_text'),
         is_uniq=F('id_attribute__is_uniq')
     )
+    print('extra: {}'.format(extra))
     cadrd_arrts_before = {attr.id: attr.field_name for attr in extra}  # Атрибуты до редактирования
-    print('cadrd_arrts_before: {}'.format(cadrd_arrts_before))
+    # print('cadrd_arrts_before: {}'.format(cadrd_arrts_before))
     cadrd_arrts_after = set()
     form = CardForm(request.POST or None, request.FILES or None,
-                    initial=model_to_dict(card), extra=list(chain(Attribute.objects.all(), extra)))
+                    initial=model_to_dict(card), extra=list(chain(Attribute.objects.exclude(field_name__in=cadrd_arrts_before.values()), extra)))
     context = {
         'form': form,
     }
     if request.method == 'POST':
         if form.is_valid():
             card = card_save(form=form, card=card)
+            # получил поле которое было добавлено
+            for key, value in form.data.items():
+                if key not in form.cleaned_data and key.startswith('custom'):
+                    print('data_items -> key: {}, value: {}'.format(key, value))
             for key, value in form.cleaned_data.items():
+                print('form.cleaned_data -> key: {}, value: {}'.format(key, value))
+                key_in_db = key.split('_')[-1]
                 attr_id = int(form.fields[key].widget.attrs.get('id'))
                 # Если есть значение и id цифра, если id был ранее и имя поля соответствует id
                 if value:
                     if (attr_id in cadrd_arrts_before and
-                            cadrd_arrts_before[attr_id] == key
+                            cadrd_arrts_before[attr_id] == key_in_db
                     ):
-                        print('Старый ключ: {}'.format(key))
+                        # print('Старый ключ: {}'.format(key))
                         # Тогда перезаписываем значения
                         if isinstance(value, InMemoryUploadedFile):
                             card_attr = get_object_or_404(CardAttribute,
@@ -96,8 +103,8 @@ def card_edit(request, card_id=None):
                         card_attr.save()
                         cadrd_arrts_after.add(attr_id)
                     else:
-                        print('Новый ключ: {}'.format(key))
-                        attr = Attribute.objects.filter(field_name=key)
+                        # print('Новый ключ: {}'.format(key))
+                        attr = Attribute.objects.filter(field_name=key_in_db)
                         if attr:
                             if isinstance(value, InMemoryUploadedFile):
                                 file = form.cleaned_data.get(key)
@@ -126,11 +133,12 @@ def new_card(request):
         if form.is_valid():
             card = card_save(form=form)
             for key, value in form.cleaned_data.items():
+                key_in_db = key.split('_')[-1]
                 if value:
                     if isinstance(value, InMemoryUploadedFile):
                         file = form.cleaned_data.get(key)
                         value = image_save(file)
-                    attr = Attribute.objects.filter(field_name=key)
+                    attr = Attribute.objects.filter(field_name=key_in_db)
                     if attr:
                         CardAttribute.objects.create(
                             id_attribute=attr.first(),

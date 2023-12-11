@@ -33,6 +33,10 @@ FORM_TYPES = {
 }
 
 
+class MyForm(forms.Form):
+    pass
+
+
 class CardForm(forms.Form):
     name = forms.CharField(label='Имя')
     last_name = forms.CharField(label='Фамилия')
@@ -40,9 +44,9 @@ class CardForm(forms.Form):
     def __init__(self, *args, **kwargs):
         extra = kwargs.pop('extra')
         super(CardForm, self).__init__(*args, **kwargs)
-        for field in extra:
+        for number, field in enumerate(extra):
             try:
-                self.fields[field.field_name] = FORM_TYPES[
+                self.fields['custom_{}_{}'.format(number, field.field_name)] = FORM_TYPES[
                     getattr(field.attr_type, 'attr_type', field.attr_type)](
                     label=field.label,
                     help_text=field.help_text,
@@ -57,11 +61,11 @@ class CardForm(forms.Form):
                 raise ValidationError(
                     '{} - {}'.format(
                         'Ошибка связанная с ', err))
-            self.fields[field.field_name].widget.attrs['is_uniq'] = str(
+            self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['is_uniq'] = str(
                 getattr(field, 'is_uniq')).lower
-            self.fields[field.field_name].widget.attrs['attr_type'] = str(
+            self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['attr_type'] = str(
                 getattr(field, 'attr_type'))
-            self.fields[field.field_name].widget.attrs['id'] = str(
+            self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['id'] = str(
                 getattr(field, 'id'))
             # self.fields[field.field_name].widget.attrs['multiple'] = True
 
