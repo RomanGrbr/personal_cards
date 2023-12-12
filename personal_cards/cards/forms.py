@@ -33,8 +33,14 @@ FORM_TYPES = {
 }
 
 
-class MyForm(forms.Form):
+class ItemsForm(forms.Form):
     pass
+
+
+class PersonForm(forms.ModelForm):
+    class Meta:
+        model = Card
+        fields = '__all__'
 
 
 class CardForm(forms.Form):
