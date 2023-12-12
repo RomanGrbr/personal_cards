@@ -135,12 +135,16 @@ def new_card(request):
             new_arrg = []
             for key, value in dict(form.data).items():
                 if len(value) > 1:
-                    for val in value[:len(value) - 2]:
-                        obj = {key: value}
-                        new_arrg.append(obj)
-            print(new_arrg)
-            # print(dict(form.data)['car'])
-            print(form.cleaned_data)
+                    for data in value[:len(value) - 1]:
+                        obj = {key: data}
+            # tank = forms.IntegerField(widget=forms.HiddenInput(), initial=123)
+            field = {'car': form.fields['car'].__class__()}
+            DataForm = type('DynamicItemsForm', (ItemsForm,), field)
+            # new_form = DataForm(initial={'car': 'Mersedes'})
+            NewFormSet = formset_factory(DataForm, extra=1)
+            new_form_set = NewFormSet(initial=[{'car': 'Mersedes'}])
+            print(new_form_set.is_valid())
+            print(new_form_set.errors)
         return render(request, template, context)
     return render(request, template, context)
 
