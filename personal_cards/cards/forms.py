@@ -37,11 +37,18 @@ class ItemsForm(forms.Form):
     pass
 
 
-class PersonForm(forms.ModelForm):
-    class Meta:
-        model = Card
-        fields = '__all__'
+# class PersonForm(forms.ModelForm):
+#     class Meta:
+#         model = Card
+#         fields = '__all__'
+class AgeForm(forms.Form):
+    age = forms.IntegerField(label='Возраст')
 
+class PersonForm(forms.Form):
+    name = forms.CharField(label='Имя')
+    last_name = forms.CharField(label='Фамилия')
+    class Meta:
+        fields = '__all__'
 
 class CardForm(forms.Form):
     name = forms.CharField(label='Имя')

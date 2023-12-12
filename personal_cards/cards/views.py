@@ -11,7 +11,7 @@ from django.conf import settings
 from django.db.models import F, Q
 from django.forms.models import model_to_dict
 
-from .forms import ItemsForm, PersonForm, FORM_TYPES, CardForm
+from .forms import ItemsForm, PersonForm, FORM_TYPES, CardForm, AgeForm
 from .models import Attribute, Card, CardAttribute
 
 from django import forms
@@ -52,12 +52,17 @@ def index(request):
     }
     return render(request, template, context)
 
-def new_card(request):
-    template = 'card.html'
+
+def new_card(request, field_name=None):
+    count_fields ={}
+    for param, value in request.GET.items():
+        if value.isdigit():
+            count_fields[param] = int(value)
+    template = 'new_card.html'
     context = {}
-    # formset = formset_factory(FormAge, extra=2)
-    forms = []
-    # attr_fields = dict()
+    person_form = PersonForm(request.POST or None, request.FILES or None)
+    context['person_form'] = person_form
+    context['forms'] = []
     for atr in Attribute.objects.all():
         attr_fields = dict()
         attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.attr_type](
@@ -67,15 +72,46 @@ def new_card(request):
         )
         attr_fields[atr.field_name].widget.attrs['is_uniq'] = atr.is_uniq
         DynamicItemsForm = type('DynamicItemsForm', (ItemsForm,), attr_fields)
-        forms.append(DynamicItemsForm)
-
-    form = forms
-    context['form'] = form
+        if atr.field_name in count_fields:
+            formset = formset_factory(DynamicItemsForm, extra=count_fields[atr.field_name])
+        else:
+            formset = formset_factory(DynamicItemsForm, extra=1)
+        context['forms'].append(formset(request.POST or None, request.FILES or None, prefix=atr.field_name))
     if request.method == 'POST':
-        if form.is_valid():
-            print(form.data)
-        return render(request, template, context)
+        if person_form.is_valid():
+            print('person_form is valid')
+        # for form in context['forms']:
+            # for data in form.data:
+            # print(form.data)
+            # if form.is_valid():
+                # print(form.cleaned_data)
+                # print('form is valid')
     return render(request, template, context)
+
+# def new_card(request):
+#     template = 'card.html'
+#     context = {}
+#     # formset = formset_factory(FormAge, extra=2)
+#     forms = []
+#     # attr_fields = dict()
+#     for atr in Attribute.objects.all():
+#         attr_fields = dict()
+#         attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.attr_type](
+#             label=atr.label,
+#             help_text=atr.help_text,
+#             required=False
+#         )
+#         attr_fields[atr.field_name].widget.attrs['is_uniq'] = atr.is_uniq
+#         DynamicItemsForm = type('DynamicItemsForm', (ItemsForm,), attr_fields)
+#         forms.append(DynamicItemsForm)
+#
+#     form = forms
+#     context['form'] = forms
+#     if request.method == 'POST':
+#         if form.is_valid():
+#             print(form.data)
+#         return render(request, template, context)
+#     return render(request, template, context)
 
 # Рабочий вариант
 # def new_card(request):

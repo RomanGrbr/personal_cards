@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <title>
+
+    </title>
+  </head>
+  <body>
+  <div>
+    <a href="{% url 'cards:index' %}">На главную</a>
+  </div>
+    <main>
+      <div class="container py-5">
+        <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ formset.management_form }}
+          <table>
+            {{ person_form.as_p }}
+            {% for form in forms %}
+            {{ form.as_p }}
+            {% endfor %}
+            {{ age_form.as_table }}
+          </table>
+          <div>
+            <input type="submit" value="Создать запись" class="btn btn-primary">
+          </div>
+          </form>
+      </div>
+    </main><br>
+
+  </body>
+</html>
