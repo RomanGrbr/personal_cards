@@ -4,11 +4,44 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script
-      src="https://code.jquery.com/jquery-3.6.0.min.js"
-      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
-      crossorigin="anonymous"
-    ></script>
+    <script>
+      function exampleFilter(elem) {
+        switch (elem.nodeName.toUpperCase()) {
+          case 'INPUT':
+              return true;
+          default:
+              return false;
+        }
+      }
+
+      function getAllSiblings(elem, filter) {
+        var sibs = [];
+        elem = elem.parentNode.firstChild;
+
+        do {
+            if (elem.nodeType === 3) continue; // text node
+            if (!filter || filter(elem)) sibs.push(elem);
+        } while (elem = elem.nextSibling)
+        return sibs;
+      }
+
+      function delElement(e){
+        var element = getAllSiblings(e, exampleFilter)[0]
+        var td = element.parentNode
+        var tr = td.parentNode
+        tr.parentNode.removeChild(tr)
+      }
+
+      function addNewElement(e){
+        var element = getAllSiblings(e, exampleFilter)[0]
+        var td = element.parentNode
+        var tr = td.parentNode
+        var new_element = tr.cloneNode(true)
+        new_element.childNodes
+        tr.before(new_element)
+        console.log(new_element.lastChild)
+      }
+    </script>
     <title>
       {% block title %}{% endblock %}
     </title>

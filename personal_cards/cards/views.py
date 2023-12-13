@@ -12,6 +12,8 @@ from .utils import card_annotate, get_data, image_save
 
 
 def method_save_card(card: Card, form: CardForm) -> None:
+    """Сохраняет """
+    attrs = []
     for key, value in form.cleaned_data.items():
         if value:
             if isinstance(value, InMemoryUploadedFile):
@@ -20,10 +22,12 @@ def method_save_card(card: Card, form: CardForm) -> None:
             name = key.split('_')[-1]
             attr = Attribute.objects.filter(field_name=name)
             if attr:
-                CardAttribute.objects.create(
-                    id_attribute=attr.first(),
-                    id_card=card,
-                    value=value
+                attrs.append(
+                    CardAttribute(
+                        id_attribute=attr.first(),
+                        id_card=card,
+                        value=value
+                    )
                 )
 
     new_args = get_data(dict(form.data))
@@ -33,15 +37,16 @@ def method_save_card(card: Card, form: CardForm) -> None:
             if isinstance(data['attr_type'], InMemoryUploadedFile):
                 data['value'] = image_save(data['value'])
             name = data['field_name'].split('_')[-1]
-            attr = Attribute.objects.filter(
-                field_name=name
-            )
+            attr = Attribute.objects.filter(field_name=name)
             if attr:
-                CardAttribute.objects.create(
-                    id_attribute=attr.first(),
-                    id_card=card,
-                    value=data['value']
+                attrs.append(
+                    CardAttribute(
+                        id_attribute=attr.first(),
+                        id_card=card,
+                        value=data['value']
+                    )
                 )
+    CardAttribute.objects.bulk_create(attrs)
 
 
 def index(request):

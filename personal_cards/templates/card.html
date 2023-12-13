@@ -13,50 +13,7 @@
   {% else %}
     <h1>Создать запись</h1>
   {% endif %}
-<!--  <script>-->
-<!--    function exampleFilter(elem) {-->
-<!--    switch (elem.nodeName.toUpperCase()) {-->
-<!--        case 'INPUT':-->
-<!--            return true;-->
-<!--        default:-->
-<!--            return false;-->
-<!--    }-->
-<!--}-->
 
-<!--    function getAllSiblings(elem, filter) {-->
-<!--    var sibs = [];-->
-<!--    elem = elem.parentNode.firstChild;-->
-
-<!--    do {-->
-
-<!--        if (elem.nodeType === 3) continue; // text node-->
-<!--        if (!filter || filter(elem)) sibs.push(elem);-->
-<!--    } while (elem = elem.nextSibling)-->
-<!--    return sibs;-->
-<!--}-->
-
-<!--    function send(e) {-->
-<!--      var URL = "/card_attr_delete/"-->
-<!--      var sib = getAllSiblings(e, exampleFilter)-->
-<!--      console.log(sib, sib[0].id, sib[0].value)-->
-<!--      let xhr = new XMLHttpRequest();-->
-<!--      URL = URL + sib[0].id + "/delete/"-->
-<!--      xhr.open("POST", URL)-->
-<!--      console.log(URL)-->
-<!--      var b = {"id":sib[0].id, "value":sib[0].value}-->
-<!--      xhr.send(b)-->
-<!--    }-->
-<!--    </script>-->
-<script>
-    function add(e){
-        var input1 = document.createElement("input")
-        var div1 = document.createElement("div")
-        input1.type="text"
-        input1.name="name"
-        div1.appendChild(input1)
-        e.before(div1)
-    }
-</script>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ formset.management_form }}
@@ -65,7 +22,10 @@
           {% for field in form %}
             <tr>
               <td>
-                {{ field.label }} {{ field }}<button type="button" onclick="add(this)">+</button>
+                {{ field.label }} {{ field }}
+                {% if field.name != "name" and field.name != "last_name" %}
+                  <button type="button" onclick="addNewElement(this)">+</button><button type="button" onclick="delElement(this)">-</button>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}
