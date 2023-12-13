@@ -1,6 +1,5 @@
 from django.db import models
 
-
 MAX_LENGTH = 100
 
 

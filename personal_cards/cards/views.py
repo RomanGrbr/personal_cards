@@ -1,14 +1,14 @@
 import os
 from itertools import chain
 
-from django.shortcuts import render, get_object_or_404, redirect
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models import Q
 from django.forms.models import model_to_dict
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CardForm
 from .models import Attribute, Card, CardAttribute
-from .utils import image_save, get_data, card_annotate
+from .utils import card_annotate, get_data, image_save
 
 
 def method_save_card(card: Card, form: CardForm) -> None:
@@ -26,8 +26,8 @@ def method_save_card(card: Card, form: CardForm) -> None:
                     value=value
                 )
 
-    new_arrg = get_data(dict(form.data))
-    clean_data = form.my_validator_data(new_arrg)
+    new_args = get_data(dict(form.data))
+    clean_data = form.my_validator_data(new_args)
     for data in clean_data:
         if not data['error']:
             if isinstance(data['attr_type'], InMemoryUploadedFile):
@@ -74,13 +74,13 @@ def card_edit(request, card_id):
     template = 'card.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card_annotate(card)
-    cadrd_arrts_before = {attr.id: attr.field_name for attr in extra}
+    card_attrs_before = {attr.id: attr.field_name for attr in extra}
     form = CardForm(
         request.POST or None, request.FILES or None,
         initial=model_to_dict(card),
         extra=list(chain(
             Attribute.objects.exclude(
-                field_name__in=cadrd_arrts_before.values()), extra)
+                field_name__in=card_attrs_before.values()), extra)
         )
     )
     context = {
@@ -92,7 +92,9 @@ def card_edit(request, card_id):
             card.last_name = form.cleaned_data['last_name']
             # удалить старые данные
             for attr in card.attrs.all():
-                if attr.id_attribute.attr_type.attr_type in ['FileField', 'ImageField']:
+                if attr.id_attribute.attr_type.attr_type in [
+                    'FileField', 'ImageField'
+                ]:
                     try:
                         os.remove(attr.value)
                     except Exception as e:

@@ -3,7 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
 
-from .views import card_new, index, card_delete, card_edit
+from .views import card_delete, card_edit, card_new, index
 
 app_name = 'cards'
 

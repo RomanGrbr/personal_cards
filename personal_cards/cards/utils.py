@@ -1,11 +1,11 @@
 import base64
-import uuid
 import os
+import uuid
 from typing import List
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.conf import settings
 from django.db.models import F
 
 

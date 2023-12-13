@@ -3,7 +3,6 @@ from typing import List
 from django import forms
 from django.forms import ValidationError
 
-
 FORM_TYPES = {
     'BooleanField': forms.BooleanField,
     'CharField': forms.CharField,
