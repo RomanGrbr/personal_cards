@@ -13,74 +13,63 @@
   {% else %}
     <h1>Создать запись</h1>
   {% endif %}
-  <script>
-    function exampleFilter(elem) {
-    switch (elem.nodeName.toUpperCase()) {
-        case 'INPUT':
-            return true;
-        default:
-            return false;
+<!--  <script>-->
+<!--    function exampleFilter(elem) {-->
+<!--    switch (elem.nodeName.toUpperCase()) {-->
+<!--        case 'INPUT':-->
+<!--            return true;-->
+<!--        default:-->
+<!--            return false;-->
+<!--    }-->
+<!--}-->
+
+<!--    function getAllSiblings(elem, filter) {-->
+<!--    var sibs = [];-->
+<!--    elem = elem.parentNode.firstChild;-->
+
+<!--    do {-->
+
+<!--        if (elem.nodeType === 3) continue; // text node-->
+<!--        if (!filter || filter(elem)) sibs.push(elem);-->
+<!--    } while (elem = elem.nextSibling)-->
+<!--    return sibs;-->
+<!--}-->
+
+<!--    function send(e) {-->
+<!--      var URL = "/card_attr_delete/"-->
+<!--      var sib = getAllSiblings(e, exampleFilter)-->
+<!--      console.log(sib, sib[0].id, sib[0].value)-->
+<!--      let xhr = new XMLHttpRequest();-->
+<!--      URL = URL + sib[0].id + "/delete/"-->
+<!--      xhr.open("POST", URL)-->
+<!--      console.log(URL)-->
+<!--      var b = {"id":sib[0].id, "value":sib[0].value}-->
+<!--      xhr.send(b)-->
+<!--    }-->
+<!--    </script>-->
+<script>
+    function add(e){
+        var input1 = document.createElement("input")
+        var div1 = document.createElement("div")
+        input1.type="text"
+        input1.name="name"
+        div1.appendChild(input1)
+        e.before(div1)
     }
-}
-
-    function getAllSiblings(elem, filter) {
-    var sibs = [];
-    elem = elem.parentNode.firstChild;
-
-    do {
-
-        if (elem.nodeType === 3) continue; // text node
-        if (!filter || filter(elem)) sibs.push(elem);
-    } while (elem = elem.nextSibling)
-    return sibs;
-}
-
-    function send(e) {
-      var URL = "/card_attr_delete/"
-      var sib = getAllSiblings(e, exampleFilter)
-      console.log(sib, sib[0].id, sib[0].value)
-      let xhr = new XMLHttpRequest();
-      URL = URL + sib[0].id + "/delete/"
-      xhr.open("POST", URL)
-      console.log(URL)
-      var b = {"id":sib[0].id, "value":sib[0].value}
-      xhr.send(b)
-    }
-<!--    <button type="button" onclick="send(this)">КНОПКА</button>-->
-    </script>
+</script>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ formset.management_form }}
     <table>
         {% if not "/delete/" in request.path %}
-<!--          {% for field in card_form %}-->
-<!--            <tr>-->
-<!--              <td>-->
-<!--                {{ field.label }} {{ field }}-->
-<!--              </td>-->
-<!--            </tr>-->
-<!--          {% endfor %}-->
-<!--          {% for field in dynamic_form %}-->
-<!--            <tr>-->
-<!--              <td>-->
-<!--                {{ field.label }} {{ field }}-->
-<!--              </td>-->
-<!--            </tr>-->
-<!--          {% endfor %}-->
           {% for field in form %}
             <tr>
               <td>
-                {{ field.label }} {{ field }}
+                {{ field.label }} {{ field }}<button type="button" onclick="add(this)">+</button>
               </td>
             </tr>
           {% endfor %}
         {% else %}
-<!--          {% for field in card_form %}-->
-<!--            {{ field.label }}: {{ field.initial }}<br>-->
-<!--          {% endfor %}-->
-<!--          {% for field in dynamic_form %}-->
-<!--            {{ field.label }}: {{ field.initial }}<br>-->
-<!--          {% endfor %}-->
           {% for field in form %}
             {{ field.label }}: {{ field.initial }}<br>
           {% endfor %}
