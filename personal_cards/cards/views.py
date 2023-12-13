@@ -2,6 +2,7 @@ import os
 import uuid
 import base64
 from itertools import chain
+from typing import List
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -10,8 +11,9 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from django.db.models import F, Q
 from django.forms.models import model_to_dict
+from django.core.exceptions import ValidationError
 
-from .forms import ItemsForm, PersonForm, FORM_TYPES, CardForm, AgeForm
+from .forms import CardForm, dynamic_form_creator
 from .models import Attribute, Card, CardAttribute
 
 from django import forms
@@ -113,38 +115,82 @@ def index(request):
 #         return render(request, template, context)
 #     return render(request, template, context)
 
+
+def get_data(form_data: dict) -> List[dict]:
+    """Формирует список имен полей и значений не попавших в cleaned_data.
+    Если длина полученного значения в data больше 1, то поле имеет
+    дополнительные поля.
+    Берется каждое значение до предпоследнего элемента и его имя поля,
+    формируется список со словарями.
+
+    """
+    new_arrg_data = []
+    for key, value in form_data.items():
+        if len(value) > 1:
+            for data in value[:len(value) - 1]:
+                obj = {key: data}
+                new_arrg_data.append(obj)
+    return new_arrg_data
+
+
+def validator_data(new_arrg: list, form) -> List[dict]:
+    """Валидация значений полей не попавших в cleaned_data.
+    Сопоставляет имя нового поля с имеющимися в форме,
+    если поле есть, то создает аналогичный тип поля и валидирует.
+
+    """
+    valid_data = []
+    for item in new_arrg:
+        for field_name, data in item.items():
+            if field_name in form.fields:
+                new_field = form.fields[field_name].__class__()
+                error_message = None
+                try:
+                    new_field.clean(data)
+                except ValidationError as err:
+                    error_message = err
+                finally:
+                    obj = {
+                        'field_name': field_name,
+                        'attr_type': form.fields[field_name].__class__,
+                        'value': data,
+                        'error': error_message
+                    }
+                    valid_data.append(obj)
+
+    return valid_data
+
+
+# def get_file_field(data, form):
+#     """Находит поле с файлом и возвращает его"""
+#     for i, item in enumerate(data):
+#         for field_name in item:
+#             if field_name in form.fields:
+#                 if isinstance(
+#                         form.fields[field_name].__class__, InMemoryUploadedFile
+#                 ):
+#                     yield data.pop(i)
+
+
 # Рабочий вариант
 def new_card(request):
     template = 'card.html'
     context = {}
-    # formset = formset_factory(FormAge, extra=2)
-    attr_fields = dict()
-    for atr in Attribute.objects.all():
-        attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.attr_type](
-            label=atr.label,
-            help_text=atr.help_text,
-            required=False
-        )
-        attr_fields[atr.field_name].widget.attrs['is_uniq'] = atr.is_uniq
-
-    DynamicItemsForm = type('DynamicItemsForm', (ItemsForm,), attr_fields)
-    form = DynamicItemsForm(request.POST or None)
-    context['form'] = form
+    # Динамическое создание полей дополнительных атрибутов
+    DinamicForm = dynamic_form_creator(Attribute)
+    card_form = CardForm(request.POST or None, request.FILES or None)
+    dynamic_form = DinamicForm(request.POST or None, request.FILES or None)
+    context['card_form'] = card_form
+    context['dynamic_form'] = dynamic_form
     if request.method == 'POST':
-        if form.is_valid():
-            new_arrg = []
-            for key, value in dict(form.data).items():
-                if len(value) > 1:
-                    for data in value[:len(value) - 1]:
-                        obj = {key: data}
-            # tank = forms.IntegerField(widget=forms.HiddenInput(), initial=123)
-            field = {'car': form.fields['car'].__class__()}
-            DataForm = type('DynamicItemsForm', (ItemsForm,), field)
-            # new_form = DataForm(initial={'car': 'Mersedes'})
-            NewFormSet = formset_factory(DataForm, extra=1)
-            new_form_set = NewFormSet(initial=[{'car': 'Mersedes'}])
-            print(new_form_set.is_valid())
-            print(new_form_set.errors)
+        if card_form.is_valid() and dynamic_form.is_valid():
+            # Спиок имен полей и значений не попавших в cleaned_data
+            new_arrg = get_data(dict(dynamic_form.data))
+            # Валидация значений полей не попавших в cleaned_data
+            clean_data = validator_data(new_arrg, dynamic_form)
+            for data in clean_data:
+                if not data.get('error'):
+                    print(data)
         return render(request, template, context)
     return render(request, template, context)
 

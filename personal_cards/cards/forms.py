@@ -37,51 +37,63 @@ class ItemsForm(forms.Form):
     pass
 
 
-# class PersonForm(forms.ModelForm):
-#     class Meta:
-#         model = Card
-#         fields = '__all__'
-class AgeForm(forms.Form):
-    age = forms.IntegerField(label='Возраст')
+class CardForm(forms.ModelForm):
+    # name = forms.CharField(label='Имя')
+    # last_name = forms.CharField(label='Фамилия')
 
-class PersonForm(forms.Form):
-    name = forms.CharField(label='Имя')
-    last_name = forms.CharField(label='Фамилия')
     class Meta:
+        model = Card
         fields = '__all__'
 
-class CardForm(forms.Form):
-    name = forms.CharField(label='Имя')
-    last_name = forms.CharField(label='Фамилия')
 
-    def __init__(self, *args, **kwargs):
-        extra = kwargs.pop('extra')
-        super(CardForm, self).__init__(*args, **kwargs)
-        for number, field in enumerate(extra):
-            try:
-                self.fields['custom_{}_{}'.format(number, field.field_name)] = FORM_TYPES[
-                    getattr(field.attr_type, 'attr_type', field.attr_type)](
-                    label=field.label,
-                    help_text=field.help_text,
-                    required=False,
-                    initial=getattr(field, 'value', None)
-                )
-            except KeyError:
-                raise ValidationError(
-                    '{} - {}'.format(
-                        'Недопустимый тип поля', field.attr_type.attr_type))
-            except Exception as err:
-                raise ValidationError(
-                    '{} - {}'.format(
-                        'Ошибка связанная с ', err))
-            self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['is_uniq'] = str(
-                getattr(field, 'is_uniq')).lower
-            self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['attr_type'] = str(
-                getattr(field, 'attr_type'))
-            self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['id'] = str(
-                getattr(field, 'id'))
-            # self.fields[field.field_name].widget.attrs['multiple'] = True
+def dynamic_form_creator(atrr_class):
+    """Создает форму с полями соответсвующих типов.
+    На основе записей имен и типов полей в моедели Attribute
 
-    def extra_fields(self):
-        for name, value in self.cleaned_data.items():
-            yield self.fields[name].label, value
+    """
+    attr_fields = dict()
+    for atr in atrr_class.objects.all():
+        attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.attr_type](
+            label=atr.label,
+            help_text=atr.help_text,
+            required=False
+        )
+        attr_fields[atr.field_name].widget.attrs['is_uniq'] = atr.is_uniq
+    return type('DynamicItemsForm', (ItemsForm,), attr_fields)
+
+
+# class CardForm(forms.Form):
+#     name = forms.CharField(label='Имя')
+#     last_name = forms.CharField(label='Фамилия')
+#
+#     def __init__(self, *args, **kwargs):
+#         extra = kwargs.pop('extra')
+#         super(CardForm, self).__init__(*args, **kwargs)
+#         for number, field in enumerate(extra):
+#             try:
+#                 self.fields['custom_{}_{}'.format(number, field.field_name)] = FORM_TYPES[
+#                     getattr(field.attr_type, 'attr_type', field.attr_type)](
+#                     label=field.label,
+#                     help_text=field.help_text,
+#                     required=False,
+#                     initial=getattr(field, 'value', None)
+#                 )
+#             except KeyError:
+#                 raise ValidationError(
+#                     '{} - {}'.format(
+#                         'Недопустимый тип поля', field.attr_type.attr_type))
+#             except Exception as err:
+#                 raise ValidationError(
+#                     '{} - {}'.format(
+#                         'Ошибка связанная с ', err))
+#             self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['is_uniq'] = str(
+#                 getattr(field, 'is_uniq')).lower
+#             self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['attr_type'] = str(
+#                 getattr(field, 'attr_type'))
+#             self.fields['custom_{}_{}'.format(number, field.field_name)].widget.attrs['id'] = str(
+#                 getattr(field, 'id'))
+#             # self.fields[field.field_name].widget.attrs['multiple'] = True
+#
+#     def extra_fields(self):
+#         for name, value in self.cleaned_data.items():
+#             yield self.fields[name].label, value

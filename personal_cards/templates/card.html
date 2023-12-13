@@ -53,7 +53,14 @@
     {{ formset.management_form }}
     <table>
         {% if not "/delete/" in request.path %}
-          {% for field in form %}
+          {% for field in card_form %}
+            <tr>
+              <td>
+                {{ field.label }} {{ field }}
+              </td>
+            </tr>
+          {% endfor %}
+          {% for field in dynamic_form %}
             <tr>
               <td>
                 {{ field.label }} {{ field }}
@@ -61,7 +68,10 @@
             </tr>
           {% endfor %}
         {% else %}
-          {% for field in form %}
+          {% for field in card_form %}
+            {{ field.label }}: {{ field.initial }}<br>
+          {% endfor %}
+          {% for field in dynamic_form %}
             {{ field.label }}: {{ field.initial }}<br>
           {% endfor %}
         {% endif %}
