@@ -19,19 +19,32 @@
     {{ formset.management_form }}
     <table>
         {% if not "/delete/" in request.path %}
+
           {% for field in form %}
             <tr>
               <td>
                 {{ field.label }} {{ field }}
-                {% if field.name != "name" and field.name != "last_name" %}
-                  <button type="button" onclick="addNewElement(this)">+</button><button type="button" onclick="delElement(this)">-</button>
-                {% endif %}
+                  {% if field.name != "name" and field.name != "last_name" %}
+                    <button type="button" onclick="addNewElement(this)">+</button><button type="button" onclick="delElement(this)">-</button>
+                  {% endif %}
+                {% endfor %}
               </td>
             </tr>
-          {% endfor %}
+            {% for file in files %}
+              <p>Ссылка: <a href="{{ file }}">{{ file }}</a></p>
+              <img src="{{ file }}" width="100px">
+            {% endfor %}
+
         {% else %}
+
           {% for field in form %}
-            {{ field.label }}: {{ field.initial }}<br>
+              {% if field.field.widget.attrs.attr_type == 'ImageField' %}
+                <a href="{{ file.initial }}">
+                  <img src="{{ field.initial }}" width="100px">
+                </a>
+              {% else %}
+                <b>{{ field.label }}:</b> {{ field.initial }}<br>
+            {% endif %}
           {% endfor %}
         {% endif %}
     </table>

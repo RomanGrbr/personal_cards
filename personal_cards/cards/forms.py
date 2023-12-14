@@ -61,6 +61,7 @@ class CardForm(forms.Form):
         extra = kwargs.pop('extra')
         super(CardForm, self).__init__(*args, **kwargs)
         for n, field in enumerate(extra):
+            # print(f'field initial-> {getattr(field, "value", None)}')
             try:
                 self.fields[f'custom_{n}_{field.field_name}'] = FORM_TYPES[
                     getattr(field.attr_type, 'attr_type', field.attr_type)](
@@ -83,7 +84,7 @@ class CardForm(forms.Form):
                 getattr(field, 'attr_type'))
         #     self.fields[f'custom_{n}_{field.field_name}'].widget.attrs[f'custom_id_{n}'] = str(
         #         getattr(field, 'id'))
-        #     self.fields[field.field_name].widget.attrs['multiple'] = True
+            self.fields[f'custom_{n}_{field.field_name}'].widget.attrs['multiple'] = True
 
     def my_validator_data(self, new_arrg: list) -> List[dict]:
         """Валидация значений полей не попавших в cleaned_data.

@@ -7,9 +7,10 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db.models import F
+from django.core.files.storage import FileSystemStorage
 
-
-def image_save(file):
+def image_save(file) -> str:
+    """Сохраняет изображение и возвращает путь с именем в uuid"""
     tmp_file = ""
     if file:
         image_bytes = file.read()
@@ -18,10 +19,18 @@ def image_save(file):
             str(uuid.uuid5(uuid.NAMESPACE_X500, b_64img)),
             file.name.rsplit('.')[-1]
         )
-        path = default_storage.save(filename,
-                                    ContentFile(file.read()))
-        tmp_file = os.path.join(settings.MEDIA_ROOT, path)
-    return tmp_file
+
+        fs = FileSystemStorage()
+        path = fs.save(filename, file)
+        file_url = fs.url(path)
+        print(f'filename-> {path}')
+
+        # Полный путь
+        # path = default_storage.save(filename,
+        #                             ContentFile(file.read()))
+        # file_url = os.path.join(settings.MEDIA_ROOT, path)
+        print(f'tmp_file-> {file_url}')
+    return file_url
 
 
 def get_data(form_data: dict) -> List[dict]:
