@@ -8,14 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CardForm
 from .models import Attribute, Card, CardAttribute
-from .utils import card_annotate, get_data, image_save
-
-
-def del_file_from_folder(path: str) -> None:
-    try:
-        os.remove(path)
-    except Exception as e:
-        print(e)
+from .utils import card_annotate, get_data, image_save, del_file_from_folder
 
 
 def method_save_card_files(files: dict) -> list:

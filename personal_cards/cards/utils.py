@@ -9,6 +9,7 @@ from django.core.files.storage import default_storage
 from django.db.models import F
 from django.core.files.storage import FileSystemStorage
 
+
 def image_save(file) -> str:
     """Сохраняет изображение и возвращает путь с именем в uuid"""
     tmp_file = ""
@@ -23,14 +24,19 @@ def image_save(file) -> str:
         fs = FileSystemStorage()
         path = fs.save(filename, file)
         file_url = fs.url(path)
-        print(f'filename-> {path}')
 
         # Полный путь
         # path = default_storage.save(filename,
         #                             ContentFile(file.read()))
         # file_url = os.path.join(settings.MEDIA_ROOT, path)
-        print(f'tmp_file-> {file_url}')
     return file_url
+
+
+def del_file_from_folder(path: str) -> None:
+    try:
+        os.remove(f'{settings.BASE_DIR}{path}')
+    except Exception as e:
+        print(e)
 
 
 def get_data(form_data: dict) -> List[dict]:

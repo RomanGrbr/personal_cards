@@ -31,8 +31,7 @@
               </td>
             </tr>
             {% for file in files %}
-              <p>Ссылка: <a href="{{ file }}">{{ file }}</a></p>
-              <img src="{{ file }}" width="100px">
+              <p>Ссылка: <a href="{{ file }}"><img src="{{ file }}" width="100px"></a></p>
             {% endfor %}
 
         {% else %}
