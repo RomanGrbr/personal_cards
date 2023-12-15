@@ -9,10 +9,7 @@
         {{ card.name }} - {{ card.last_name }}
       </div>
       <div>
-        <a href="{% url 'cards:card_edit' card.id %}">Изменить запись</a>
-      </div>
-      <div>
-        <a href="{% url 'cards:card_delete' card.id %}">Удалить запись</a>
+        <a href="{% url 'cards:card_info' card.id %}">Посмотреть запись</a>
       </div>
       {% if not forloop.last %}
         <hr>

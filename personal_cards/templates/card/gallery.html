@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}
+  Персональные карточки
+{% endblock %}
+{% block content %}
+  <div>
+    <a href="{% url 'cards:card_edit' card %}">Назад</a>
+  </div><br>
+    {% for file in images %}
+    <img src="{{ file.image }}" width="100px">
+    <div>
+      <button type="button" onclick="delImage({{ card }}, {{ file.pk }})">-</button>
+    </div>
+    {% endfor %}
+
+
+{% endblock %}

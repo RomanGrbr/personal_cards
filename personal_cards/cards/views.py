@@ -1,4 +1,3 @@
-import os
 from itertools import chain
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -6,9 +5,12 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import CardForm
+from .forms import CardForm, CardAttributeForm
 from .models import Attribute, Card, CardAttribute
 from .utils import card_annotate, get_data, image_save, del_file_from_folder
+
+
+FILE_FIELDS = ['FileField', 'ImageField']
 
 
 def method_save_card_files(files: dict) -> list:
@@ -45,7 +47,6 @@ def method_save_card(card: Card, form: CardForm, files: dict = None) -> None:
             form.cleaned_data.update(file)
     for key, value in form.cleaned_data.items():
         if value:
-            # print(type(value))
             if isinstance(value, InMemoryUploadedFile):
                 file = form.cleaned_data.get(key)
                 value = image_save(file)
@@ -64,16 +65,34 @@ def method_save_card(card: Card, form: CardForm, files: dict = None) -> None:
 
 def index(request):
     """Получить все записи"""
-    template = 'index.html'
+    template = 'card/index.html'
     context = {
         'cards': Card.objects.all(),
     }
     return render(request, template, context)
 
 
+def card_info(request, card_id):
+    """Детальная информация записи"""
+    template = 'card/card_info.html'
+    card = get_object_or_404(Card, pk=card_id)
+    extra = card_annotate(card)
+    form = CardForm(request.POST or None,
+                    initial=model_to_dict(card), extra=extra.exclude(
+            attr_type__in=FILE_FIELDS))
+    context = {
+        'form': form,
+    }
+    files_urls = [file.value for file in
+                  extra.filter(attr_type__in=FILE_FIELDS)
+                  ]
+    context.update({'files': files_urls})
+    return render(request, template, context)
+
+
 def card_new(request):
     """Создать новую запись"""
-    template = 'card.html'
+    template = 'card/card_new.html'
     extra = Attribute.objects.all()
     form = CardForm(request.POST or None, request.FILES or None, extra=extra)
     context = {
@@ -87,31 +106,26 @@ def card_new(request):
             card.save()
             method_save_card(
                 card=card, form=form, files=dict(request.FILES) or None)
-        return redirect('cards:card_edit', card_id=card.id)
+        return redirect('cards:card_info', card_id=card.id)
     return render(request, template, context)
 
 
 def card_edit(request, card_id):
     """Редактировать запись"""
-    template = 'card.html'
+    template = 'card/card_edit.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card_annotate(card)
     card_attrs_before = {attr.id: attr.field_name for attr in extra}
     form = CardForm(
         request.POST or None, request.FILES or None,
         initial=model_to_dict(card),
-        extra=list(chain(
-            Attribute.objects.exclude(
-                field_name__in=card_attrs_before.values()), extra)
-        )
+        extra=list(chain(Attribute.objects.exclude(
+            field_name__in=card_attrs_before.values()),
+                         extra.exclude(attr_type__in=FILE_FIELDS)))
     )
     context = {
         'form': form,
     }
-    files_urls = [file.value for file in
-                  extra.filter(attr_type__in=['FileField', 'ImageField'])
-                  ]
-    context.update({'files': files_urls})
     if request.method == 'POST':
         if form.is_valid():
             card.name = form.cleaned_data.pop('name')
@@ -121,29 +135,31 @@ def card_edit(request, card_id):
                 if attr.id_attribute.attr_type.attr_type in [
                     'FileField', 'ImageField'
                 ]:
-                    del_file_from_folder(attr.value)
-                attr.delete()
+                    continue
+                else:
+                    attr.delete()
             card.save()
             method_save_card(
                 card=card, form=form, files=dict(request.FILES) or None
             )
             context.update({'form': form})
-            return redirect('cards:card_edit', card_id=card.id)
+            return redirect('cards:card_info', card_id=card.id)
     return render(request, template, context)
 
 
 def card_delete(request, card_id):
     """Удалить запись"""
-    template = 'card.html'
+    template = 'card/card_info.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card_annotate(card)
     form = CardForm(request.POST or None, request.FILES or None,
-                    initial=model_to_dict(card), extra=extra)
+                    initial=model_to_dict(card), extra=extra.exclude(
+                        attr_type__in=FILE_FIELDS))
     context = {
         'form': form,
     }
     files_urls = [file.value for file in
-                  extra.filter(attr_type__in=['FileField', 'ImageField'])
+                  extra.filter(attr_type__in=FILE_FIELDS)
                   ]
     context.update({'files': files_urls})
     if request.method == 'POST':
@@ -152,10 +168,34 @@ def card_delete(request, card_id):
         )
         for file in files:
             del_file_from_folder(file.value)
-            # try:
-            #     os.remove(file.value)
-            # except Exception as e:
-            #     print(f'При удалении {e}')
         card.delete()
         return redirect('cards:index')
+    return render(request, template, context)
+
+
+# def card_gallery(request, card_id):
+#     template = 'card/gallery.html'
+#     context = {}
+#     card = get_object_or_404(Card, pk=card_id)
+#     extra = card_annotate(card)
+#     # form = CardForm(initial=model_to_dict(card), extra=extra)
+#     files_urls = [{'pk': file.id, 'value': file.value} for file in
+#                   extra.filter(attr_type__in=FILE_FIELDS)
+#                   ]
+#     context['files'] = files_urls
+#     # context['form'] = form
+#     return render(request, template, context)
+
+def card_gallery(request, card_id):
+    template = 'card/gallery.html'
+    context = {}
+    card = get_object_or_404(Card, pk=card_id)
+    extra = CardAttribute.objects.filter(
+        id_card=card, id_attribute__attr_type__attr_type='ImageField')
+    images = [
+        {'pk': data.id, 'image': data.value}
+        for data in extra
+    ]
+    context['card'] = card.id
+    context['images'] = images
     return render(request, template, context)

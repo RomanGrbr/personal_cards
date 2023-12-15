@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}
+  Персональные карточки
+{% endblock %}
+{% block content %}
+  {% with data=form.initial %}
+  {% if "/delete/" in request.path %}
+  <div>
+    <a href="{% url 'cards:card_info' data.id %}">Назад</a>
+  </div>
+  <br>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table>
+      {% for field in form %}
+        <b>{{ field.label }}:</b> {{ field.initial }}<br>
+      {% endfor %}
+    </table>
+    <p><b>Фотографии:</b></p>
+    {% for file in files %}
+      <a href="{{ file }}"><img src="{{ file }}" width="100px"></a>
+    {% endfor %}
+    {% if "/delete/" in request.path %}
+      <div>
+        <input type="submit" value="Удалить запись" class="btn btn-primary">
+      </div>
+    {% else %}
+      <div>
+        <a href="{% url 'cards:card_edit' data.id %}">Редактировать</a>
+      </div>
+      <div>
+        <a href="{% url 'cards:card_delete' data.id %}">Удалить</a>
+      </div>
+    </form>
+    {% endif %}
+  {% endwith %}
+{% endblock %}

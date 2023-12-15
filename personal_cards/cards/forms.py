@@ -2,6 +2,7 @@ from typing import List
 
 from django import forms
 from django.forms import ValidationError
+from .models import CardAttribute
 
 FORM_TYPES = {
     'BooleanField': forms.BooleanField,
@@ -28,6 +29,12 @@ FORM_TYPES = {
     'URLField': forms.URLField,
     'UUIDField': forms.UUIDField,
 }
+
+
+class CardAttributeForm(forms.ModelForm):
+    class Meta:
+        model = CardAttribute
+        fields = ['id_attribute', 'value']
 
 
 class ItemsForm(forms.Form):
@@ -61,7 +68,6 @@ class CardForm(forms.Form):
         extra = kwargs.pop('extra')
         super(CardForm, self).__init__(*args, **kwargs)
         for n, field in enumerate(extra):
-            # print(f'field initial-> {getattr(field, "value", None)}')
             try:
                 self.fields[f'custom_{n}_{field.field_name}'] = FORM_TYPES[
                     getattr(field.attr_type, 'attr_type', field.attr_type)](

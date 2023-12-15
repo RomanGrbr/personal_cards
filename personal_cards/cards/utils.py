@@ -12,7 +12,7 @@ from django.core.files.storage import FileSystemStorage
 
 def image_save(file) -> str:
     """Сохраняет изображение и возвращает путь с именем в uuid"""
-    tmp_file = ""
+    # tmp_file = ""
     if file:
         image_bytes = file.read()
         b_64img = str(base64.b64encode(image_bytes))
@@ -24,7 +24,6 @@ def image_save(file) -> str:
         fs = FileSystemStorage()
         path = fs.save(filename, file)
         file_url = fs.url(path)
-
         # Полный путь
         # path = default_storage.save(filename,
         #                             ContentFile(file.read()))
