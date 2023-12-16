@@ -31,10 +31,9 @@ FORM_TYPES = {
 }
 
 
-class CardAttributeForm(forms.ModelForm):
-    class Meta:
-        model = CardAttribute
-        fields = ['id_attribute', 'value']
+class CardAttributeForm(forms.Form):
+    images = forms.ImageField(label='Изображение', required=False)
+    images.widget.attrs['multiple'] = True
 
 
 class ItemsForm(forms.Form):

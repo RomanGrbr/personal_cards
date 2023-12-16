@@ -6,7 +6,7 @@ from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CardForm, CardAttributeForm
-from .models import Attribute, Card, CardAttribute
+from .models import Attribute, Card, CardAttribute, AttributeType
 from .utils import card_annotate, get_data, image_save, del_file_from_folder
 
 
@@ -189,16 +189,32 @@ def card_gallery(request, card_id):
     card = get_object_or_404(Card, pk=card_id)
     extra = CardAttribute.objects.filter(
         id_card=card, id_attribute__attr_type__attr_type='ImageField')
+    add_form = CardAttributeForm(request.POST or None, request.FILES or None)
+    context['form'] = add_form
     context['card'] = card.id
     context['images'] = update_images(extra)
     if request.method == 'POST':
+        if add_form.is_valid():
+            image_type_attr = get_object_or_404(Attribute,
+                attr_type__attr_type='ImageField')
+            images = []
+            for image in request.FILES.getlist('images'):
+                images.append(CardAttribute(
+                    id_attribute = image_type_attr,
+                    id_card = card,
+                    value=image_save(image)
+                ))
+            CardAttribute.objects.bulk_create(images)
+            extra = CardAttribute.objects.filter(
+                id_card=card,
+                id_attribute__attr_type__attr_type='ImageField')
         if 'del_image' in request.POST:
             attr_id = request.POST.get('del_image')
             attr = get_object_or_404(CardAttribute, pk=attr_id)
             del_file_from_folder(attr.value)
             attr.delete()
-            extra = CardAttribute.objects.filter(
-                id_card=card, id_attribute__attr_type__attr_type='ImageField')
-            context.update({'images': update_images(extra)})
-            return render(request, template, context)
+        extra = CardAttribute.objects.filter(
+            id_card=card, id_attribute__attr_type__attr_type='ImageField')
+        context.update({'images': update_images(extra)})
+        return render(request, template, context)
     return render(request, template, context)
