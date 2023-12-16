@@ -6,12 +6,15 @@
   <div>
     <a href="{% url 'cards:card_edit' card %}">Назад</a>
   </div><br>
+<form method="post">
+  {% csrf_token %}
     {% for file in images %}
     <img src="{{ file.image }}" width="100px">
     <div>
-      <button type="button" onclick="delImage({{ card }}, {{ file.pk }})">-</button>
+      <button type="submit" name="del_image" value="{{ file.pk }}">-</button>
     </div>
-    {% endfor %}
+  {% endfor %}
 
+</form>
 
 {% endblock %}

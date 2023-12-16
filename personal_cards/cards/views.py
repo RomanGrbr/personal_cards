@@ -115,13 +115,18 @@ def card_edit(request, card_id):
     template = 'card/card_edit.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card_annotate(card)
-    card_attrs_before = {attr.id: attr.field_name for attr in extra}
+    card_attrs_before = {attr.id: attr.field_name for attr in extra.exclude(
+        attr_type__in=FILE_FIELDS)}
+    clean_field_for_form = Attribute.objects.exclude(
+        Q(field_name__in=card_attrs_before.values()) |
+        Q(attr_type__attr_type__in=FILE_FIELDS)
+    )
     form = CardForm(
         request.POST or None, request.FILES or None,
         initial=model_to_dict(card),
-        extra=list(chain(Attribute.objects.exclude(
-            field_name__in=card_attrs_before.values()),
-                         extra.exclude(attr_type__in=FILE_FIELDS)))
+        extra=list(chain(
+            clean_field_for_form,
+            extra.exclude(attr_type__in=FILE_FIELDS)))
     )
     context = {
         'form': form,
@@ -132,9 +137,7 @@ def card_edit(request, card_id):
             card.last_name = form.cleaned_data.pop('last_name')
             # удалить старые данные
             for attr in card.attrs.all():
-                if attr.id_attribute.attr_type.attr_type in [
-                    'FileField', 'ImageField'
-                ]:
+                if attr.id_attribute.attr_type.attr_type in FILE_FIELDS:
                     continue
                 else:
                     attr.delete()
@@ -173,18 +176,12 @@ def card_delete(request, card_id):
     return render(request, template, context)
 
 
-# def card_gallery(request, card_id):
-#     template = 'card/gallery.html'
-#     context = {}
-#     card = get_object_or_404(Card, pk=card_id)
-#     extra = card_annotate(card)
-#     # form = CardForm(initial=model_to_dict(card), extra=extra)
-#     files_urls = [{'pk': file.id, 'value': file.value} for file in
-#                   extra.filter(attr_type__in=FILE_FIELDS)
-#                   ]
-#     context['files'] = files_urls
-#     # context['form'] = form
-#     return render(request, template, context)
+def update_images(data):
+    return [
+        {'pk': data.id, 'image': data.value}
+        for data in data
+    ]
+
 
 def card_gallery(request, card_id):
     template = 'card/gallery.html'
@@ -192,10 +189,16 @@ def card_gallery(request, card_id):
     card = get_object_or_404(Card, pk=card_id)
     extra = CardAttribute.objects.filter(
         id_card=card, id_attribute__attr_type__attr_type='ImageField')
-    images = [
-        {'pk': data.id, 'image': data.value}
-        for data in extra
-    ]
     context['card'] = card.id
-    context['images'] = images
+    context['images'] = update_images(extra)
+    if request.method == 'POST':
+        if 'del_image' in request.POST:
+            attr_id = request.POST.get('del_image')
+            attr = get_object_or_404(CardAttribute, pk=attr_id)
+            del_file_from_folder(attr.value)
+            attr.delete()
+            extra = CardAttribute.objects.filter(
+                id_card=card, id_attribute__attr_type__attr_type='ImageField')
+            context.update({'images': update_images(extra)})
+            return render(request, template, context)
     return render(request, template, context)

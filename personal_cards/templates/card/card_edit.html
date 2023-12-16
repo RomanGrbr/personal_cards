@@ -27,12 +27,9 @@
       </tr>
     </table>
       <input type="submit" value="Сохранить изменения" class="btn btn-primary">
-  </form>
+  </form><br>
   <div>
     <a href="{% url 'cards:card_gallery' data.id %}">Галерея</a>
-  </div>
-  <div>
-    <a href="{% url 'cards:card_info' data.id %}">Назад</a>
   </div>
   {% if form.is_valid %}
     <h3>Запись отредактирована</h3>
