@@ -6,21 +6,21 @@ from django.db.models import Exists, OuterRef
 MAX_LENGTH = 250
 
 
-# class CardQuerySet(models.QuerySet):
-#
-#     def attr_annotations(self):
-#         return self.attrs.all().select_related('attribute', 'value').annotate(
-#             field_name=F('attribute__field_name'),
-#             label=F('attribute__label'),
-#             help_text=F('attribute__help_text'),
-#             is_uniq=F('attribute__is_uniq'),
-#         )
+class CardQuerySet(models.QuerySet):
+
+    def attr_annotations(self):
+        return self.attrs.all().select_related('attribute', 'value').annotate(
+            field_name=F('attribute__field_name'),
+            label=F('attribute__label'),
+            help_text=F('attribute__help_text'),
+            is_uniq=F('attribute__is_uniq'),
+        )
 
 
 class Card(models.Model):
     name = models.CharField('Имя', max_length=MAX_LENGTH)
     last_name = models.CharField('Фамилия', max_length=MAX_LENGTH)
-    # objects = CardQuerySet.as_manager()
+    objects = CardQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'карточка'
@@ -62,7 +62,7 @@ class Value(models.Model):
     def __str__(self):
         for field in self._meta.get_fields():
             if field.name not in ['id', 'cards'] and getattr(self, field.name):
-                return f'{getattr(self, field.name)}'
+                return f'{field.name} - {getattr(self, field.name)}'
         return super().__str__()
 
 
@@ -83,15 +83,15 @@ class Attribute(models.Model):
         return self.label
 
 
-class CardQuerySet(models.QuerySet):
-
-    def attr_annotations(self):
-        return self.select_related('attribute', 'value').annotate(
-            field_name=F('attribute__field_name'),
-            label=F('attribute__label'),
-            help_text=F('attribute__help_text'),
-            is_uniq=F('attribute__is_uniq'),
-        )
+# class CardQuerySet(models.QuerySet):
+#
+#     def attr_annotations(self):
+#         return self.select_related('attribute', 'value').annotate(
+#             field_name=F('attribute__field_name'),
+#             label=F('attribute__label'),
+#             help_text=F('attribute__help_text'),
+#             is_uniq=F('attribute__is_uniq'),
+#         )
 
 
 class CardAttribute(models.Model):
@@ -107,7 +107,7 @@ class CardAttribute(models.Model):
         Value, on_delete=models.CASCADE, verbose_name='Значение',
         related_name='cards'
     )
-    objects = CardQuerySet.as_manager()
+    # objects = CardQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'атрибут'
