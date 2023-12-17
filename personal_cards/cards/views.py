@@ -4,6 +4,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.generic import ListView, CreateView
+from django.urls import reverse_lazy
 
 from .forms import CardForm, CardAttributeForm
 from .models import Attribute, Card, CardAttribute, AttributeType
@@ -63,18 +65,22 @@ def method_save_card(card: Card, form: CardForm, files: dict = None) -> None:
     CardAttribute.objects.bulk_create(attrs)
 
 
-def index(request):
-    """Получить все записи"""
-    template = 'card/index.html'
-    context = {
-        'cards': Card.objects.all(),
-    }
-    return render(request, template, context)
+# def index(request):
+#     """Получить все записи"""
+#     template = 'cards/card_list.html'
+#     context = {
+#         'cards': Card.objects.all(),
+#     }
+#     return render(request, template, context)
 
 
-def card_info(request, card_id):
+class CardListView(ListView):
+    model = Card
+
+
+def card_info_or_delete(request, card_id):
     """Детальная информация записи"""
-    template = 'card/card_info.html'
+    template = 'cards/card_info_or_delete.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card_annotate(card)
     form = CardForm(request.POST or None,
@@ -87,12 +93,18 @@ def card_info(request, card_id):
                   extra.filter(attr_type__in=FILE_FIELDS)
                   ]
     context.update({'files': files_urls})
+    if request.method == 'POST':
+        files = extra.filter(attr_type__in=FILE_FIELDS)
+        for file in files:
+            del_file_from_folder(file.value)
+        card.delete()
+        return redirect('cards:list')
     return render(request, template, context)
 
 
 def card_new(request):
     """Создать новую запись"""
-    template = 'card/card_new.html'
+    template = 'cards/card_new.html'
     extra = Attribute.objects.all()
     form = CardForm(request.POST or None, request.FILES or None, extra=extra)
     context = {
@@ -106,13 +118,20 @@ def card_new(request):
             card.save()
             method_save_card(
                 card=card, form=form, files=dict(request.FILES) or None)
-        return redirect('cards:card_info', card_id=card.id)
+        return redirect('cards:card_info_or_delete', card_id=card.id)
     return render(request, template, context)
+
+
+class CardCreateView(CreateView):
+    model = Card
+    # form_class = CardForm(extra=Attribute.objects.all())
+    # template_name = 'cards/card_new.html'
+    # success_url = reverse_lazy('cards:card_info_or_delete', card_id=pk)
 
 
 def card_edit(request, card_id):
     """Редактировать запись"""
-    template = 'card/card_edit.html'
+    template = 'cards/card_edit.html'
     card = get_object_or_404(Card, pk=card_id)
     extra = card_annotate(card)
     card_attrs_before = {attr.id: attr.field_name for attr in extra.exclude(
@@ -146,33 +165,7 @@ def card_edit(request, card_id):
                 card=card, form=form, files=dict(request.FILES) or None
             )
             context.update({'form': form})
-            return redirect('cards:card_info', card_id=card.id)
-    return render(request, template, context)
-
-
-def card_delete(request, card_id):
-    """Удалить запись"""
-    template = 'card/card_info.html'
-    card = get_object_or_404(Card, pk=card_id)
-    extra = card_annotate(card)
-    form = CardForm(request.POST or None, request.FILES or None,
-                    initial=model_to_dict(card), extra=extra.exclude(
-                        attr_type__in=FILE_FIELDS))
-    context = {
-        'form': form,
-    }
-    files_urls = [file.value for file in
-                  extra.filter(attr_type__in=FILE_FIELDS)
-                  ]
-    context.update({'files': files_urls})
-    if request.method == 'POST':
-        files = extra.filter(
-            Q(attr_type='FileField') | Q(attr_type='ImageField')
-        )
-        for file in files:
-            del_file_from_folder(file.value)
-        card.delete()
-        return redirect('cards:index')
+            return redirect('cards:card_info_or_delete', card_id=card.id)
     return render(request, template, context)
 
 
@@ -184,7 +177,7 @@ def update_images(data):
 
 
 def card_gallery(request, card_id):
-    template = 'card/gallery.html'
+    template = 'cards/gallery.html'
     context = {}
     card = get_object_or_404(Card, pk=card_id)
     extra = CardAttribute.objects.filter(

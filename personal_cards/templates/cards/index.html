@@ -9,7 +9,7 @@
         {{ card.name }} - {{ card.last_name }}
       </div>
       <div>
-        <a href="{% url 'cards:card_info' card.id %}">Посмотреть запись</a>
+        <a href="{% url 'cards:card_info_or_delete' card.id %}">Посмотреть запись</a>
       </div>
       {% if not forloop.last %}
         <hr>
