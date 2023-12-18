@@ -55,17 +55,17 @@ def get_data(form_data: dict) -> List[dict]:
     return new_arrg_data
 
 
-def card_annotate(card):
-    """Аннотация модели Card атрибутами из связаннях таблиц"""
-    return card.attrs.select_related(
-                    'id_attribute', 'id_attribute__attr_type'
-                ).annotate(
-                    field_name=F('id_attribute__field_name'),
-                    attr_type=F('id_attribute__attr_type__attr_type'),
-                    label=F('id_attribute__label'),
-                    help_text=F('id_attribute__help_text'),
-                    is_uniq=F('id_attribute__is_uniq')
-                )
+# def card_annotate(card):
+#     """Аннотация модели Card атрибутами из связаннях таблиц"""
+#     return card.attrs.select_related(
+#                     'id_attribute', 'id_attribute__attr_type'
+#                 ).annotate(
+#                     field_name=F('id_attribute__field_name'),
+#                     attr_type=F('id_attribute__attr_type__attr_type'),
+#                     label=F('id_attribute__label'),
+#                     help_text=F('id_attribute__help_text'),
+#                     is_uniq=F('id_attribute__is_uniq')
+#                 )
 
 
 # def validator_data(new_arrg: list, form) -> List[dict]:

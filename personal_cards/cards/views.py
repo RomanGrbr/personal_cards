@@ -5,26 +5,22 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, CreateView
-from django.urls import reverse_lazy
 
 from .forms import CardForm, CardAttributeForm
-from .models import Attribute, Card, CardAttribute, AttributeType
-from .utils import card_annotate, get_data, image_save, del_file_from_folder
+from .models import Attribute, Card, CardAttribute
+from .utils import get_data, image_save, del_file_from_folder
 
 
 FILE_FIELDS = ['FileField', 'ImageField']
 
 
 def method_save_card_files(files: dict) -> list:
-    """Сохранить файлы кроме последнего, он попадет в cleaned_data"""
+    """Сохранить файлы из files"""
     save_files = []
     for key, value in files.items():
-        for n, file in enumerate(value[:len(value) - 1]):
-            if isinstance(file, InMemoryUploadedFile):
-                folder = image_save(file)
-                save_files.append({
-                    f'{n}_{key}': folder,
-                })
+        for n, file in enumerate(value):
+            folder = image_save(file)
+            save_files.append({f'{n}_{key}': folder})
     return save_files
 
 
@@ -48,15 +44,13 @@ def method_save_card(card: Card, form: CardForm, files: dict = None) -> None:
         for file in method_save_card_files(files):
             form.cleaned_data.update(file)
     for key, value in form.cleaned_data.items():
-        if value:
-            if isinstance(value, InMemoryUploadedFile):
-                file = form.cleaned_data.get(key)
-                value = image_save(file)
+        if value and not isinstance(value, InMemoryUploadedFile):
             attr = get_bulk_item(card=card, key=key, value=value)
             if attr:
                 attrs.append(attr)
     new_args = get_data(dict(form.data))
     clean_data = form.my_validator_data(new_args)
+    # Сохраняем записи без ошибок валидации
     for data in clean_data:
         if not data['error']:
             attrs.append(get_bulk_item(
@@ -81,21 +75,19 @@ class CardListView(ListView):
 def card_info_or_delete(request, card_id):
     """Детальная информация записи"""
     template = 'cards/card_info_or_delete.html'
+    context = {}
     card = get_object_or_404(Card, pk=card_id)
-    extra = card_annotate(card)
-    form = CardForm(request.POST or None,
-                    initial=model_to_dict(card), extra=extra.exclude(
-            attr_type__in=FILE_FIELDS))
-    context = {
-        'form': form,
-    }
-    files_urls = [file.value for file in
-                  extra.filter(attr_type__in=FILE_FIELDS)
-                  ]
-    context.update({'files': files_urls})
+    extra = card.attrs.add_attrs_annotations()
+    form = CardForm(
+        request.POST or None, initial=model_to_dict(card),
+        extra=extra.exclude(attr_type__in=FILE_FIELDS)
+    )
+    context['form'] = form
+    context['files'] = [
+        file.value for file in extra.filter(attr_type__in=FILE_FIELDS)
+    ]
     if request.method == 'POST':
-        files = extra.filter(attr_type__in=FILE_FIELDS)
-        for file in files:
+        for file in extra.filter(attr_type__in=FILE_FIELDS):
             del_file_from_folder(file.value)
         card.delete()
         return redirect('cards:list')
@@ -107,9 +99,7 @@ def card_new(request):
     template = 'cards/card_new.html'
     extra = Attribute.objects.all()
     form = CardForm(request.POST or None, request.FILES or None, extra=extra)
-    context = {
-        'form': form,
-    }
+    context = {'form': form}
     if request.method == 'POST':
         if form.is_valid():
             card = Card()
@@ -122,18 +112,12 @@ def card_new(request):
     return render(request, template, context)
 
 
-class CardCreateView(CreateView):
-    model = Card
-    # form_class = CardForm(extra=Attribute.objects.all())
-    # template_name = 'cards/card_new.html'
-    # success_url = reverse_lazy('cards:card_info_or_delete', card_id=pk)
-
-
 def card_edit(request, card_id):
     """Редактировать запись"""
     template = 'cards/card_edit.html'
+    context = {}
     card = get_object_or_404(Card, pk=card_id)
-    extra = card_annotate(card)
+    extra = card.attrs.add_attrs_annotations()
     card_attrs_before = {attr.id: attr.field_name for attr in extra.exclude(
         attr_type__in=FILE_FIELDS)}
     clean_field_for_form = Attribute.objects.exclude(
@@ -147,9 +131,7 @@ def card_edit(request, card_id):
             clean_field_for_form,
             extra.exclude(attr_type__in=FILE_FIELDS)))
     )
-    context = {
-        'form': form,
-    }
+    context['form'] = form
     if request.method == 'POST':
         if form.is_valid():
             card.name = form.cleaned_data.pop('name')
@@ -180,8 +162,7 @@ def card_gallery(request, card_id):
     template = 'cards/gallery.html'
     context = {}
     card = get_object_or_404(Card, pk=card_id)
-    extra = CardAttribute.objects.filter(
-        id_card=card, id_attribute__attr_type__attr_type='ImageField')
+    extra = card.attrs.add_attrs_annotations().filter(attr_type='ImageField')
     add_form = CardAttributeForm(request.POST or None, request.FILES or None)
     context['form'] = add_form
     context['card'] = card.id
@@ -193,14 +174,11 @@ def card_gallery(request, card_id):
             images = []
             for image in request.FILES.getlist('images'):
                 images.append(CardAttribute(
-                    id_attribute = image_type_attr,
-                    id_card = card,
+                    id_attribute=image_type_attr,
+                    id_card=card,
                     value=image_save(image)
                 ))
             CardAttribute.objects.bulk_create(images)
-            extra = CardAttribute.objects.filter(
-                id_card=card,
-                id_attribute__attr_type__attr_type='ImageField')
         if 'del_image' in request.POST:
             attr_id = request.POST.get('del_image')
             attr = get_object_or_404(CardAttribute, pk=attr_id)

@@ -35,7 +35,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'new_cards.apps.NewCardsConfig',
     'cards.apps.CardsConfig',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.db.models import F
 MAX_LENGTH = 100
 
 
@@ -37,9 +37,22 @@ class Attribute(models.Model):
         return self.label
 
 
+# class CardQuerySet(models.QuerySet):
+#
+#     def add_attrs_annotations(self):
+#         return self.annotate(
+#                     field_name=F('id_attribute__field_name'),
+#                     attr_type=F('id_attribute__attr_type__attr_type'),
+#                     label=F('id_attribute__label'),
+#                     help_text=F('id_attribute__help_text'),
+#                     is_uniq=F('id_attribute__is_uniq')
+#                 )
+
+
 class Card(models.Model):
     name = models.CharField('Имя', max_length=MAX_LENGTH)
     last_name = models.CharField('Фамилия', max_length=MAX_LENGTH)
+    # objects = CardQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'карточка'
@@ -47,6 +60,20 @@ class Card(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class CardAttributeQuerySet(models.QuerySet):
+
+    def add_attrs_annotations(self):
+        return self.select_related(
+                    'id_attribute', 'id_attribute__attr_type'
+                ).annotate(
+                    field_name=F('id_attribute__field_name'),
+                    attr_type=F('id_attribute__attr_type__attr_type'),
+                    label=F('id_attribute__label'),
+                    help_text=F('id_attribute__help_text'),
+                    is_uniq=F('id_attribute__is_uniq')
+                )
 
 
 class CardAttribute(models.Model):
@@ -59,6 +86,7 @@ class CardAttribute(models.Model):
         related_name='attrs'
     )
     value = models.TextField('Значение')
+    objects = CardAttributeQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'значение атрибута'
