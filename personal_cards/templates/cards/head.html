@@ -1,0 +1,202 @@
+<head><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>
+  <meta content="text/html" charset="utf-8" http-equiv="Content-Type">
+  <title>Персона</title>
+  <!-- <link rel="stylesheet" ng-href="{{style.url}}">
+
+  {{style}} -->
+  <!-- ngRepeat: style in styles -->
+
+  <link type="image/x-icon" rel="shortcut icon" href="../lib/favicon.ico">
+
+  <link rel="stylesheet" href="/lib/css/bootstrap.min3.css">
+  <script type="text/javascript" src="/lib/js/jquery.js"></script>
+  <script type="text/javascript" src="/lib/js/bootstrap.js"></script>
+  <script type="text/javascript" src="/lib/js/angular.js"></script>
+  <script type="text/javascript" src="/lib/js/angular-sanitize.min.js"></script>
+  <script type="text/javascript" src="/lib/js/math.js"></script>
+
+
+  <script src="/lib/highcharts/highcharts.js"></script>
+  <script src="/lib/highcharts/modules/series-label.js"></script>
+  <script src="/lib/highcharts/modules/exporting.js"></script>
+  <script src="/lib/highcharts/modules/offline-exporting.js"></script>
+  <!-- <script src="../lib/highcharts/themes/gray.js"></script> -->
+
+  <script src="/lib/highcharts/modules/export-data.js"></script>
+  <script src="/lib/highcharts/modules/accessibility.js"></script>
+  <!-- <script defer src="js/all.min.js"></script> -->
+  <link href="/lib/fontawesome-free-5.15.1-web/css/all.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/lib/css/ol.css" type="text/css">
+
+  <script src="/lib/js/ol.js"></script>
+
+
+  <!-- vis timeline -->
+  <script src="/lib/vis-timeline-7.4.9/moment.min.js"></script>
+  <script src="/lib/vis-timeline-7.4.9/vis-timeline-graph2d.min.js"></script>
+  <link href="/lib/vis-timeline-7.4.9/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css">
+  <script src="/lib/vis-timeline-7.4.9/ru.js"></script>
+  <!--  -->
+
+  <!-- heatmap -->
+  <link rel="stylesheet" href="/lib/js/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/lib/js/marker_cluster/MarkerCluster.css">
+  <link rel="stylesheet" href="/lib/js/marker_cluster/MarkerCluster.Default.css">
+
+  <script src="/lib/js/leaflet/leaflet.js"></script>
+  <script src="/lib/js/marker_cluster/leaflet.markercluster.js"></script>
+
+  <link rel="stylesheet" href="/lib/css/map_style.css">
+  <!--  -->
+
+  <style media="screen">
+    #main > div {
+      overflow-y: hidden;
+      overflow-x: hidden;
+    }
+    body {
+      /* scrollbar-color: #333 #111;
+      scrollbar-width: thin; */
+      overflow-y: hidden;}
+    INPUT {background-color: #AAA !important;}
+    .pointer {cursor: pointer;}
+    .pointer:hover{border-color: rgb(55, 120, 255);
+    box-shadow: 0 0 5px black;}
+    INPUT:not([type="range"]), SELECT, TEXTAREA, .custom-file-label, .bg-input {background-color: #DDD !important; color:#000 !important;}
+    .custom-file-label::after{content: "Выбор…";}
+    .pointer {cursor: pointer;}
+    .pointer:hover{border-color: rgb(55, 120, 255);
+    box-shadow: 0 0 5px black;}
+
+    body {
+    /* scrollbar-color: rgba(144,160,160,0.2) rgba(144,160,160,0.02);     /* «цвет ползунка» «цвет полосы скроллбара» */
+    scrollbar-width: thin;  /* толщина */
+    }
+
+    .rot {
+      animation: 2s linear 0s normal none infinite running rot;
+      -webkit-animation: 2s linear 0s normal none infinite running rot;
+      width: 100px;
+    }
+    @keyframes rot {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    @-webkit-keyframes rot {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .leaflet-control-attribution {display:none;}
+
+    .highcharts-figure, .highcharts-data-table table {
+      min-width: 360px;
+      max-width: 800px;
+      margin: 1em auto;
+    }
+
+    .highcharts-data-table table {
+      font-family: Verdana, sans-serif;
+      border-collapse: collapse;
+      border: 1px solid #EBEBEB;
+      margin: 10px auto;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+    }
+    .highcharts-data-table caption {
+        padding: 1em 0;
+        font-size: 1.2em;
+        color: #555;
+    }
+    .highcharts-data-table th {
+      font-weight: 600;
+        padding: 0.5em;
+    }
+    .highcharts-data-table td, .highcharts-data-table th, .highcharts-data-table caption {
+        padding: 0.5em;
+    }
+    .highcharts-data-table thead tr, .highcharts-data-table tr:nth-child(even) {
+        background: #f8f8f8;
+    }
+    .highcharts-data-table tr:hover {
+        background: #f1f7ff;
+    }
+
+    #general-info-block,
+    #accounts_list_confirm,
+    #offer_accounts_confirm,
+    #stats_block_wrap,
+    /* #work_with_person__block, */
+    .article_show__article_list,
+    .overflow_block {
+      overflow-y: auto;
+      overflow-x: hidden;
+      width:100%;
+    }
+
+    #left_include {
+      overflow-y:scroll !important;
+      width:100%;
+    }
+
+    #drop-area {
+      border: 2px dashed #ccc;
+      border-radius: 20px;
+      font-family: sans-serif;
+      margin: 10px auto;
+      padding: 20px;
+    }
+
+    .spinner-block {
+      display: flex;
+      justify-content: center;
+      top: 20rem;
+    }
+
+    .account-card-wrap {
+      height: 100%;
+    }
+
+
+      #imageSearchController #person-image-block {
+        overflow-y: auto;
+        height: 28rem;
+      }
+
+  .load-button {
+    display: inline-block;
+    padding: 10px;
+    background: #ccc;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+
+  #fileElem, #audioElem {
+    display: none;
+  };
+
+
+  #wiki_content {
+    height: 15rem;
+    overflow-y: scroll;
+  }
+
+  .article_show__pagination_tool {
+			height: 45px;
+  }
+
+
+  </style>
+
+</head>
