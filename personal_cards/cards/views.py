@@ -4,22 +4,27 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import ListView, CreateView
 from django.conf import settings
 from django.core.paginator import Paginator
 
-from .forms import CardForm, CardAttributeForm
+from .forms import CardForm, ImageAttributeForm, FileAttributeForm
 from .models import Attribute, Card, CardAttribute
 from .utils import get_data, image_save, del_file_from_folder
 
-
-FILE_FIELDS = ['FileField', 'ImageField']
+FILE = 'FileField'
+IMAGE = 'ImageField'
+VIDEO = 'VideoField'
+AUDIO = 'AudiField'
+FILE_FIELDS = [FILE, IMAGE, VIDEO, AUDIO]
 PER_PAGE = 3
+
 
 def method_save_card_files(files: dict) -> list:
     """Сохранить файлы из files"""
     save_files = []
     for key, value in files.items():
+        folder = ''
+        print(f'key -> {key}, value -> {value}')
         for n, file in enumerate(value):
             folder = image_save(file)
             save_files.append({f'{n}_{key}': folder})
@@ -73,22 +78,6 @@ def save_new_data(card: Card, form, request) -> None:
     )
 
 
-# def index(request):
-#     """Получить все записи"""
-#     template = 'cards/card_list.html'
-#     context = {}
-#     cards = Card.objects.all().order_by('name')
-#     if request.GET.get('q'):
-#         query = request.GET.get('q')
-#         cards = cards.filter(
-#             Q(name__icontains=query) | Q(last_name__icontains=query)
-#         )
-#     paginator = Paginator(cards, PER_PAGE)
-#     page_number = request.GET.get('page')
-#     page_obj = paginator.get_page(page_number)
-#     context['page_obj'] = page_obj
-#     return render(request, template, context)
-
 def index(request):
     """Получить все записи и форму создания"""
     template = 'cards/card_list.html'
@@ -107,23 +96,18 @@ def index(request):
     extra = Attribute.objects.all()
     form = CardForm(request.POST or None, request.FILES or None, extra=extra)
     context['form'] = form
-    # context['object_list'] = Card.objects.all()
     if request.method == 'POST':
         if form.is_valid():
             card = Card()
             save_new_data(card, form, request)
-        return redirect('cards:card_info_or_delete', card_id=card.id)
+        return redirect('cards:card_info', card_id=card.id)
 
     return render(request, template, context)
 
 
-class CardListView(ListView):
-    model = Card
-
-
-def card_info_or_delete(request, card_id):
+def card_info(request, card_id):
     """Детальная информация записи"""
-    template = 'cards/card_info_or_delete.html'
+    template = 'cards/card_info.html'
     context = {}
     card = get_object_or_404(Card, pk=card_id)
     extra = card.attrs.add_attrs_annotations()
@@ -157,7 +141,7 @@ def card_new(request):
         if form.is_valid():
             card = Card()
             save_new_data(card, form, request)
-        return redirect('cards:card_info_or_delete', card_id=card.id)
+        return redirect('cards:card_info', card_id=card.id)
     return render(request, template, context)
 
 
@@ -193,13 +177,13 @@ def card_edit(request, card_id):
                 del_file_from_folder(f'{settings.MEDIA_URL}{card.avatar}')
             save_new_data(card, form, request)
             context.update({'form': form})
-            return redirect('cards:card_info_or_delete', card_id=card.id)
+            return redirect('cards:card_info', card_id=card.id)
     return render(request, template, context)
 
 
-def update_images(data):
+def update_files(data):
     return [
-        {'pk': data.id, 'image': data.value}
+        {'pk': data.id, 'file': data.value}
         for data in data
     ]
 
@@ -208,30 +192,63 @@ def card_gallery(request, card_id):
     template = 'cards/gallery.html'
     context = {}
     card = get_object_or_404(Card, pk=card_id)
-    extra = card.attrs.add_attrs_annotations().filter(attr_type='ImageField')
-    add_form = CardAttributeForm(request.POST or None, request.FILES or None)
+    extra = card.attrs.add_attrs_annotations().filter(attr_type=IMAGE)
+    add_form = ImageAttributeForm(request.POST or None, request.FILES or None)
     context['form'] = add_form
     context['card'] = card.id
-    context['images'] = update_images(extra)
+    context['files'] = update_files(extra)
     if request.method == 'POST':
         if add_form.is_valid():
-            image_type_attr = get_object_or_404(Attribute,
-                attr_type__attr_type='ImageField')
-            images = []
-            for image in request.FILES.getlist('images'):
-                images.append(CardAttribute(
-                    id_attribute=image_type_attr,
+            file_type_attr = get_object_or_404(
+                Attribute, attr_type__attr_type=IMAGE)
+            files = []
+            for file in request.FILES.getlist('files'):
+                file.append(CardAttribute(
+                    id_attribute=file_type_attr,
                     id_card=card,
-                    value=image_save(image)
+                    value=image_save(file)
                 ))
-            CardAttribute.objects.bulk_create(images)
-        if 'del_image' in request.POST:
-            attr_id = request.POST.get('del_image')
+            CardAttribute.objects.bulk_create(files)
+        if 'del_file' in request.POST:
+            attr_id = request.POST.get('del_file')
             attr = get_object_or_404(CardAttribute, pk=attr_id)
             del_file_from_folder(attr.value)
             attr.delete()
         extra = CardAttribute.objects.filter(
-            id_card=card, id_attribute__attr_type__attr_type='ImageField')
-        context.update({'images': update_images(extra)})
+            id_card=card, id_attribute__attr_type__attr_type=IMAGE)
+        context.update({'files': update_files(extra)})
+        return render(request, template, context)
+    return render(request, template, context)
+
+
+def card_audio(request, card_id):
+    template = 'cards/gallery.html'
+    context = {}
+    card = get_object_or_404(Card, pk=card_id)
+    extra = card.attrs.add_attrs_annotations().filter(attr_type=AUDIO)
+    add_form = FileAttributeForm(request.POST or None, request.FILES or None)
+    context['form'] = add_form
+    context['card'] = card.id
+    context['files'] = update_files(extra)
+    if request.method == 'POST':
+        if add_form.is_valid():
+            file_type_attr = get_object_or_404(
+                Attribute, attr_type__attr_type=AUDIO)
+            files = []
+            for file in request.FILES.getlist('files'):
+                files.append(CardAttribute(
+                    id_attribute=file_type_attr,
+                    id_card=card,
+                    value=image_save(file)
+                ))
+            CardAttribute.objects.bulk_create(files)
+        if 'del_file' in request.POST:
+            attr_id = request.POST.get('del_file')
+            attr = get_object_or_404(CardAttribute, pk=attr_id)
+            del_file_from_folder(attr.value)
+            attr.delete()
+        extra = CardAttribute.objects.filter(
+            id_card=card, id_attribute__attr_type__attr_type=AUDIO)
+        context.update({'files': update_files(extra)})
         return render(request, template, context)
     return render(request, template, context)

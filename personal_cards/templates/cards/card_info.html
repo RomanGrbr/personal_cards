@@ -4,7 +4,12 @@
 {% endblock %}
 {% block content %}
   {% with data=form.initial %}
-
+    <div>
+      <a href="{% url 'cards:card_gallery' data.id %}">Галерея</a>
+    </div><br>
+    <div>
+      <a href="{% url 'cards:card_audio' data.id %}">Голос</a>
+    </div><br>
     {% for field in form %}
         {% if field.name == "avatar" %}
           <b>Аватарка:</b> <img src="{{ field.value.url }}" width="100px"><br>

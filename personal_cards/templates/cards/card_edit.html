@@ -8,7 +8,7 @@
   <br>
   {% with data=form.initial %}
   <div>
-    <a href="{% url 'cards:card_info_or_delete' data.id %}">Назад</a>
+    <a href="{% url 'cards:card_info' data.id %}">Назад</a>
   </div>
 
   <h3>Редактировать {{ data.id }}</h3>
@@ -33,10 +33,6 @@
 
     <input type="submit" value="Сохранить изменения" class="btn btn-primary">
   </form><br>
-
-  <div>
-    <a href="{% url 'cards:card_gallery' data.id %}">Галерея</a>
-  </div>
 
   {% if form.is_valid %}
     <h3>Запись отредактирована</h3>

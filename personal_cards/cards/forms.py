@@ -14,6 +14,8 @@ FORM_TYPES = {
     'DurationField': forms.DurationField,
     'EmailField': forms.EmailField,
     'FileField': forms.FileField,
+    'VideoField': forms.FileField,
+    'AudiField': forms.FileField,
     # 'FilePathField': forms.FilePathField(),
     'FloatField': forms.FloatField,
     'GenericIPAddressField': forms.GenericIPAddressField,
@@ -31,9 +33,14 @@ FORM_TYPES = {
 }
 
 
-class CardAttributeForm(forms.Form):
-    images = forms.ImageField(label='Изображение', required=False)
-    images.widget.attrs['multiple'] = True
+class ImageAttributeForm(forms.Form):
+    files = forms.ImageField(label='Изображение', required=False)
+    files.widget.attrs['multiple'] = True
+
+
+class FileAttributeForm(forms.Form):
+    files = forms.FileField(label='Файл', required=False)
+    files.widget.attrs['multiple'] = True
 
 
 class ItemsForm(forms.Form):

@@ -4,7 +4,7 @@
   Персональные карточки
 {% endblock %}
 
-{% block card_list %}
+{% block content %}
 
 <div class="row">
     <div class="col-8">
@@ -23,7 +23,7 @@
 <div class="row">
   {% for card in page_obj %}
       <div>
-        <a href="{% url 'cards:card_info_or_delete' card.id %}">
+        <a href="{% url 'cards:card_info' card.id %}">
             <img src="{{ card.avatar.url }}" width="100px"><br>
             {{ card.name }} - {{ card.last_name }}
         </a>
