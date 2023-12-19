@@ -1,27 +1,29 @@
 {% extends "base.html" %}
+
 {% block title %}
-  Персональные карточки
+  Галерея персональной карточки
 {% endblock %}
+
 {% block content %}
   <div>
     <a href="{% url 'cards:card_edit' card %}">Назад</a>
   </div><br>
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form }}
-  <div><br>
-       <input type="submit" value="Добавить" class="btn btn-primary">
-  </div>
-</form><br>
-
-<form method="post">
-  {% csrf_token %}
-    {% for file in images %}
-    <img src="{{ file.image }}" width="100px">
-    <div>
-      <button type="submit" name="del_image" value="{{ file.pk }}">-</button>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <div><br>
+         <input type="submit" value="Добавить" class="btn btn-primary">
     </div>
-  {% endfor %}
-</form>
+  </form><br>
+
+  <form method="post">
+    {% csrf_token %}
+      {% for file in images %}
+      <img src="{{ file.image }}" width="100px">
+      <div>
+        <button type="submit" name="del_image" value="{{ file.pk }}">-</button>
+      </div>
+    {% endfor %}
+  </form>
 
 {% endblock %}

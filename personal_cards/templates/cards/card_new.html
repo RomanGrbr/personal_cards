@@ -1,37 +1,32 @@
-{% extends "base.html" %}
-{% block title %}
-  Персональные карточки
-{% endblock %}
-{% block content %}
+<button onclick="hideShow('new_card')">Новая карточка</button><br>
 
 {% with data=form.initial %}
+  <form method="post" enctype="multipart/form-data" id="new_card" style="display: none">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table>
 
-<h1>Создать запись</h1>
-
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ formset.management_form }}
-  <table>
-    {% for field in form %}
-      <tr>
-        <td>
-          {{ field.label }} {{ field }}
-            {% if field.name != "name" and field.name != "last_name" %}
-              <button type="button" onclick="addNewElement(this)">+</button><button type="button" onclick="delElement(this)">-</button>
+      {% for field in form %}
+        <tr>
+          <td>
+            {{ field.label }} {{ field }}
+            {% if field.name != "name" and field.name != "last_name" and field.name != "avatar" %}
+              <button type="button" onclick="addNewElement(this)">+</button>
+              <button type="button" onclick="delElement(this)">-</button>
             {% endif %}
-          {% endfor %}
-        </td>
-      </tr>
-  {% for file in files %}
-    <p>Ссылка: <a href="{{ file }}"><img src="{{ file }}" width="100px"></a></p>
-  {% endfor %}
-  </table>
-   <input type="submit" value="Создать запись" class="btn btn-primary">
-</form>
+          </td>
+        </tr>
+      {% endfor %}
+    {% for file in files %}
+      <p>Ссылка: <a href="{{ file }}"><img src="{{ file }}" width="100px"></a></p>
+    {% endfor %}
+
+    </table>
+     <input type="submit" value="Создать запись" class="btn btn-primary">
+  </form>
 
   {% if form.is_valid %}
     <h3>Запись сохранена: {{ data.id }}</h3>
   {% endif %}
 
-  {% endwith %}
-{% endblock %}
+{% endwith %}

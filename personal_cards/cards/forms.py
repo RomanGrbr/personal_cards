@@ -62,6 +62,7 @@ def dynamic_form_creator(atrr_class):
 class CardForm(forms.Form):
     name = forms.CharField(label='Имя')
     last_name = forms.CharField(label='Фамилия')
+    avatar = forms.ImageField(label='Аватарка')
 
     def __init__(self, *args, **kwargs):
         extra = kwargs.pop('extra')

@@ -4,6 +4,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script type="text/javascript" scr="{% static 'css/bootstrap.js' %}"></script>
     <script>
       function exampleFilter(elem) {
         switch (elem.nodeName.toUpperCase()) {
@@ -48,26 +50,28 @@
         Http.send();
         console.log(Http.responseText)
       }
+      function hideShow(id)
+      {
+        if(document.getElementById(id).style.display=="none")
+            document.getElementById(id).style.display="block";
+        else
+            document.getElementById(id).style.display="none";
+      }
     </script>
     <title>
-      {% block title %}{% endblock %}
+      {% block title %}ФПК{% endblock %}
     </title>
   </head>
   <body>
-  <div>
-    <a href="{% url 'cards:list' %}">На главную</a>
-  </div>
-  <br>
+  {% include "includes/header.html" %}
     <main>
       <div class="container py-5">
         {% block content %}
-
+        {% block card_list %}
+        {% endblock %}
         {% endblock %}
       </div>
       <br>
-      <div>
-        <a href="{% url 'cards:card_new' %}">Создать новую карточку</a>
-      </div>
     </main><br>
   </body>
 </html>

@@ -37,22 +37,11 @@ class Attribute(models.Model):
         return self.label
 
 
-# class CardQuerySet(models.QuerySet):
-#
-#     def add_attrs_annotations(self):
-#         return self.annotate(
-#                     field_name=F('id_attribute__field_name'),
-#                     attr_type=F('id_attribute__attr_type__attr_type'),
-#                     label=F('id_attribute__label'),
-#                     help_text=F('id_attribute__help_text'),
-#                     is_uniq=F('id_attribute__is_uniq')
-#                 )
-
-
 class Card(models.Model):
     name = models.CharField('Имя', max_length=MAX_LENGTH)
     last_name = models.CharField('Фамилия', max_length=MAX_LENGTH)
-    # objects = CardQuerySet.as_manager()
+    avatar = models.ImageField(
+        'Аватарка', upload_to='avatar/', blank=True, null=True)
 
     class Meta:
         verbose_name = 'карточка'

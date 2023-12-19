@@ -1,24 +1,28 @@
 {% extends "base.html" %}
+
 {% block title %}
-  Персональные карточки
+  Редактирование карточки
 {% endblock %}
+
 {% block content %}
   <br>
   {% with data=form.initial %}
   <div>
     <a href="{% url 'cards:card_info_or_delete' data.id %}">Назад</a>
   </div>
+
   <h3>Редактировать {{ data.id }}</h3>
 
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ formset.management_form }}
+
     <table>
       {% for field in form %}
       <tr>
         <td>
           {{ field.label }} {{ field }}
-            {% if field.name != "name" and field.name != "last_name" %}
+            {% if field.name != "name" and field.name != "last_name" and field.name != "avatar" %}
               <button type="button" onclick="addNewElement(this)">+</button>
               <button type="button" onclick="delElement(this)">-</button>
             {% endif %}
@@ -26,11 +30,14 @@
         </td>
       </tr>
     </table>
-      <input type="submit" value="Сохранить изменения" class="btn btn-primary">
+
+    <input type="submit" value="Сохранить изменения" class="btn btn-primary">
   </form><br>
+
   <div>
     <a href="{% url 'cards:card_gallery' data.id %}">Галерея</a>
   </div>
+
   {% if form.is_valid %}
     <h3>Запись отредактирована</h3>
   {% endif %}

@@ -5,6 +5,8 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, CreateView
+from django.conf import settings
+from django.core.paginator import Paginator
 
 from .forms import CardForm, CardAttributeForm
 from .models import Attribute, Card, CardAttribute
@@ -12,7 +14,7 @@ from .utils import get_data, image_save, del_file_from_folder
 
 
 FILE_FIELDS = ['FileField', 'ImageField']
-
+PER_PAGE = 3
 
 def method_save_card_files(files: dict) -> list:
     """Сохранить файлы из files"""
@@ -59,13 +61,60 @@ def method_save_card(card: Card, form: CardForm, files: dict = None) -> None:
     CardAttribute.objects.bulk_create(attrs)
 
 
+def save_new_data(card: Card, form, request) -> None:
+    card.name = form.cleaned_data.pop('name')
+    card.last_name = form.cleaned_data.pop('last_name')
+    card.avatar = form.cleaned_data.pop('avatar')
+    card.save()
+    if request.FILES and request.FILES.get('avatar'):
+        request.FILES.pop('avatar')
+    method_save_card(
+        card=card, form=form, files=dict(request.FILES) or None
+    )
+
+
 # def index(request):
 #     """Получить все записи"""
 #     template = 'cards/card_list.html'
-#     context = {
-#         'cards': Card.objects.all(),
-#     }
+#     context = {}
+#     cards = Card.objects.all().order_by('name')
+#     if request.GET.get('q'):
+#         query = request.GET.get('q')
+#         cards = cards.filter(
+#             Q(name__icontains=query) | Q(last_name__icontains=query)
+#         )
+#     paginator = Paginator(cards, PER_PAGE)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
+#     context['page_obj'] = page_obj
 #     return render(request, template, context)
+
+def index(request):
+    """Получить все записи и форму создания"""
+    template = 'cards/card_list.html'
+    context = {}
+    cards = Card.objects.all().order_by('name')
+    if request.GET.get('q'):
+        query = request.GET.get('q')
+        cards = cards.filter(
+            Q(name__icontains=query) | Q(last_name__icontains=query)
+        )
+    paginator = Paginator(cards, PER_PAGE)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context['page_obj'] = page_obj
+
+    extra = Attribute.objects.all()
+    form = CardForm(request.POST or None, request.FILES or None, extra=extra)
+    context['form'] = form
+    # context['object_list'] = Card.objects.all()
+    if request.method == 'POST':
+        if form.is_valid():
+            card = Card()
+            save_new_data(card, form, request)
+        return redirect('cards:card_info_or_delete', card_id=card.id)
+
+    return render(request, template, context)
 
 
 class CardListView(ListView):
@@ -89,25 +138,25 @@ def card_info_or_delete(request, card_id):
     if request.method == 'POST':
         for file in extra.filter(attr_type__in=FILE_FIELDS):
             del_file_from_folder(file.value)
+        del_file_from_folder(f'{settings.MEDIA_URL}{card.avatar}')
         card.delete()
         return redirect('cards:list')
     return render(request, template, context)
 
 
+# TODO При изменении модели, добавить поля сохранения после валидности формы
 def card_new(request):
     """Создать новую запись"""
     template = 'cards/card_new.html'
+    context = {}
     extra = Attribute.objects.all()
     form = CardForm(request.POST or None, request.FILES or None, extra=extra)
-    context = {'form': form}
+    context['form'] = form
+    context['object_list'] = Card.objects.all()
     if request.method == 'POST':
         if form.is_valid():
             card = Card()
-            card.name = form.cleaned_data.pop('name')
-            card.last_name = form.cleaned_data.pop('last_name')
-            card.save()
-            method_save_card(
-                card=card, form=form, files=dict(request.FILES) or None)
+            save_new_data(card, form, request)
         return redirect('cards:card_info_or_delete', card_id=card.id)
     return render(request, template, context)
 
@@ -134,18 +183,15 @@ def card_edit(request, card_id):
     context['form'] = form
     if request.method == 'POST':
         if form.is_valid():
-            card.name = form.cleaned_data.pop('name')
-            card.last_name = form.cleaned_data.pop('last_name')
-            # удалить старые данные
+            # Удалить старые данные
             for attr in card.attrs.all():
                 if attr.id_attribute.attr_type.attr_type in FILE_FIELDS:
                     continue
                 else:
                     attr.delete()
-            card.save()
-            method_save_card(
-                card=card, form=form, files=dict(request.FILES) or None
-            )
+            if card.avatar != form.cleaned_data.get("avatar"):
+                del_file_from_folder(f'{settings.MEDIA_URL}{card.avatar}')
+            save_new_data(card, form, request)
             context.update({'form': form})
             return redirect('cards:card_info_or_delete', card_id=card.id)
     return render(request, template, context)
