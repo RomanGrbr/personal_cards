@@ -5,21 +5,43 @@
 {% block content %}
   {% with data=form.initial %}
 
+<a href="#">Галерея</a>
+<a href="#">Видео</a>
+<a href="#">Аудио</a><br>
 
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ formset.management_form }}
+{% for field in form %}
+  {% if field.value.url %}
+    <b>Аватарка:</b> <img src="{{ field.value.url }}" width="100px"><br>
+  {% endif %}
+{% endfor %}
 
-    <table>
-      {% for field in form %}
-      {{ field }}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  <table>
+    {% for field in form %}
+    <tr>
+      <td>
+        {% if not field.value.url %}
           <b>{{ field.label }}:</b> {{ field.initial }}<br>
-      {% endfor %}
-    </table>
+        {% endif %}
+      </td>
+     </tr>
+    {% endfor %}
 
-    <p><b>Фотографии:</b></p>
-
-    </form>
+    {% for field in attrs %}
+    <tr>
+      <td>
+        <b>{{ field.label }}:</b> {{ field.value }}<br>
+      </td>
+     </tr>
+    {% endfor %}
+  </table>
+  <div>
+    <input type="submit" value="Удалить запись" class="btn btn-primary">
+  </div><br>
+</form>
 
   {% endwith %}
 {% endblock %}

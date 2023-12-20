@@ -39,6 +39,7 @@ class Attribute(models.Model):
         return self.label
 
 
+# TODO Эту модель можно изменить
 class Card(models.Model):
     first_name = models.CharField('Имя', max_length=MAX_LENGTH)
     last_name = models.CharField('Фамилия', max_length=MAX_LENGTH)
@@ -71,16 +72,15 @@ class CardAttributeQuerySet(models.QuerySet):
 class CardAttribute(models.Model):
     attribute = models.ForeignKey(
         Attribute, on_delete=models.CASCADE, verbose_name='Атрибут',
-        related_name='card_attrs'
     )
     card = models.ForeignKey(
         Card, on_delete=models.CASCADE, verbose_name='Карточка',
-        related_name='card_attrs'
     )
     value = models.TextField('Значение')
     objects = CardAttributeQuerySet.as_manager()
 
     class Meta:
+        default_related_name = 'card_attrs'
         verbose_name = 'значение атрибута'
         verbose_name_plural = 'Значения атрибутов'
 

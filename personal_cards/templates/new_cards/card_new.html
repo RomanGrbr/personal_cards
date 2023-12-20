@@ -1,18 +1,18 @@
-<button onclick="hideShow('new_card')">Новая карточка</button><br>
+<button onclick="hideShow('card_new')">Новая карточка</button><br>
 
 {% with data=card_form.initial %}
-  <form method="post" enctype="multipart/form-data" id="new_card" style="display: none">
+  <form method="post" enctype="multipart/form-data" id="card_new" style="display: none">
     {% csrf_token %}
     {{ formset.management_form }}
     <table>
-      {% for field in card_form %}
+      {% for field in form %}
       <tr>
           <td>
             <b>{{ field.label }}:</b> {{ field }}
           </td>
         </tr>
       {% endfor %}
-      {% for field in attr_form %}
+      {% for field in attr %}
         <tr>
           <td>
             <b>{{ field.label }}:</b> {{ field }}
@@ -27,8 +27,8 @@
      <input type="submit" value="Создать запись" class="btn btn-primary">
   </form>
 
-  {% if card_form.is_valid %}
-    <h3>Запись сохранена: {{ data.id }}</h3>
+  {% if form.is_valid %}
+    <h3>Запись сохранена</h3>
   {% endif %}
 
 {% endwith %}

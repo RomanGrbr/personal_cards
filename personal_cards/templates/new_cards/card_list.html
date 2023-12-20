@@ -21,11 +21,11 @@
 {% include "includes/paginator.html" %}
 
 <div class="row">
-  {% for card in page_obj %}
+  {% for obj in page_obj %}
       <div>
-        <a href="{% url 'new_cards:card_info' card.id %}">
-            <img src="{{ card.avatar.url }}" width="100px"><br>
-            {{ card.name }} - {{ card.last_name }}
+        <a href="{% url 'new_cards:card_info' obj.id %}">
+            <img src="{{ obj.avatar.url }}" width="100px"><br>
+            {{ obj.first_name }} - {{ obj.last_name }}
         </a>
       </div><br>
   {% endfor %}

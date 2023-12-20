@@ -1,8 +1,9 @@
 from django import forms
 
-from cards.models import Card, Attribute
+from .models import Card, Attribute
 
 FORM_TYPES = {
+    'audio': forms.FileField,
     'boolean': forms.BooleanField,
     'text': forms.CharField,
     'choice': forms.ChoiceField,
@@ -12,8 +13,6 @@ FORM_TYPES = {
     'duration': forms.DurationField,
     'email': forms.EmailField,
     'file': forms.FileField,
-    'video': forms.FileField,
-    'audio': forms.FileField,
     'float': forms.FloatField,
     'ipaddress': forms.GenericIPAddressField,
     'image': forms.ImageField,
@@ -23,6 +22,7 @@ FORM_TYPES = {
     'time': forms.TimeField,
     'url': forms.URLField,
     'uuid': forms.UUIDField,
+    'video': forms.FileField,
 }
 
 
@@ -36,9 +36,9 @@ def dynamic_form_creator():
 
     """
     attr_fields = dict()
-    for n, atr in enumerate(Attribute.objects.prefetch_related('attr_type')):
-        if atr.attr_type.attr_type in FORM_TYPES:
-            attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.attr_type](
+    for atr in Attribute.objects.prefetch_related('attr_type'):
+        if atr.attr_type.type_name in FORM_TYPES:
+            attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.type_name](
                 label=atr.label,
                 help_text=atr.help_text,
                 required=False,

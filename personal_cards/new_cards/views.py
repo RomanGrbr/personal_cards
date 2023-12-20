@@ -10,8 +10,11 @@ from django.core.files.storage import FileSystemStorage
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.forms.models import model_to_dict
+from django.db.models.fields.files import ImageFieldFile, FileField
+from django.db.models import FileField, ImageField
 
-from cards.models import Card, Attribute, CardAttribute
+
+from .models import Card, Attribute, CardAttribute
 from .forms import CardForm, DynamicAttrForm, FORM_TYPES
 
 FILE = 'file'
@@ -33,13 +36,12 @@ def save_image(folder, file):
     )
     fs = FileSystemStorage()
     path = fs.save(f'{folder}/{filename}', file)
-    file_url = fs.url(f'{folder}/{path}')
-    return file_url
+    return path
 
 
 def delete_file(path: str) -> None:
     try:
-        os.remove(f'{settings.BASE_DIR}{path}')
+        os.remove(f'{settings.BASE_DIR}/{settings.MEDIA_URL}/{path}')
     except Exception as e:
         print(e)
 
@@ -48,11 +50,12 @@ def index(request):
     template = 'new_cards/card_list.html'
     context = {}
 
-    cards = Card.objects.all().order_by('name')
+    cards = Card.objects.all()
+    # TODO Заменить фильтрацию
     if request.GET.get('q'):
         query = request.GET.get('q')
         cards = cards.filter(
-            Q(name__icontains=query) | Q(last_name__icontains=query)
+            Q(first_name__icontains=query) | Q(last_name__icontains=query)
         )
     paginator = Paginator(cards, PER_PAGE)
     page_number = request.GET.get('page')
@@ -60,11 +63,10 @@ def index(request):
     context['page_obj'] = page_obj
 
     card_form = CardForm(request.POST or None, request.FILES or None)
-    context['card_form'] = card_form
+    context['form'] = card_form
 
     attr_form = DynamicAttrForm(request.POST or None, request.FILES or None)
-    context['attr_form'] = attr_form
-
+    context['attr'] = attr_form
     if request.method == 'POST':
         if card_form.is_valid() and attr_form.is_valid():
             # Если полученное поле есть в основной модели, то сохраняем
@@ -86,8 +88,8 @@ def index(request):
                             # TODO Тут можно добавить дополнительную валидацию
                             attrs.append(
                                 CardAttribute(
-                                    id_attribute=attr,
-                                    id_card=card,
+                                    attribute=attr,
+                                    card=card,
                                     value=value
                                 )
                             )
@@ -102,28 +104,43 @@ def index(request):
                         folder = save_image(attr.attr_type, value)
                         attrs.append(
                             CardAttribute(
-                                id_attribute=attr,
-                                id_card=card,
+                                attribute=attr,
+                                card=card,
                                 value=folder
                             )
                         )
             CardAttribute.objects.bulk_create(attrs)
+
+            return redirect('new_cards:list')
     return render(request, template, context)
 
 
 def card_info(request, card_id):
     """Детальная информация записи"""
-    template = 'cards/card_info.html'
+    template = 'new_cards/card_info.html'
     context = {}
     card = get_object_or_404(Card, pk=card_id)
-    # card_data = card.attrs.add_attrs_annotations().exclude(
-    #     attr_type__in=FILE_FIELDS)
-    card_form = CardForm(initial=model_to_dict(card))
-    context['card_form'] = card_form
-    # if request.method == 'POST':
-    #     for file in card_data:
-    #         del_file_from_folder(file.value)
-    #     del_file_from_folder(f'{settings.MEDIA_URL}{card.avatar}')
-    #     card.delete()
-    #     return redirect('new_cards:list')
+    context['form'] = CardForm(initial=model_to_dict(card))
+
+    context['attrs'] = card.card_attrs.add_attrs_annotations().exclude(
+        attr_type__in=FILE_FIELDS)
+    # context['images'] = card.card_attrs.add_attrs_annotations().fillter(
+    #     attr_type__in=IMAGE)
+    # context['videos'] = card.card_attrs.add_attrs_annotations().fillter(
+    #     attr_type__in=VIDEO)
+    # context['audios'] = card.card_attrs.add_attrs_annotations().fillter(
+    #     attr_type__in=AUDIO)
+
+    if request.method == 'POST':
+        for field, value in model_to_dict(card).items():
+            if type(getattr(card, field)) in [ImageFieldFile, FileField]:
+                delete_file(value)
+
+        attr_files = card.card_attrs.add_attrs_annotations().filter(
+            attr_type__in=FILE_FIELDS)
+        for file in attr_files:
+            delete_file(file.value)
+
+        card.delete()
+        return redirect('new_cards:list')
     return render(request, template, context)
