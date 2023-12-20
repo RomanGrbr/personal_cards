@@ -55,7 +55,6 @@ def dynamic_form_creator(atrr_class):
     """
     attr_fields = dict()
     for n, atr in enumerate(atrr_class.objects.all()):
-        print(atr)
         attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.attr_type](
             label=atr.label,
             help_text=atr.help_text,

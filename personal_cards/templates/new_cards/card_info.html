@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}
+  Данные карточки
+{% endblock %}
+{% block content %}
+  {% with data=form.initial %}
+
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <table>
+      {% for field in form %}
+      {{ field }}
+          <b>{{ field.label }}:</b> {{ field.initial }}<br>
+      {% endfor %}
+    </table>
+
+    <p><b>Фотографии:</b></p>
+
+    </form>
+
+  {% endwith %}
+{% endblock %}

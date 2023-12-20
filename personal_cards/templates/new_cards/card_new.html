@@ -1,0 +1,34 @@
+<button onclick="hideShow('new_card')">Новая карточка</button><br>
+
+{% with data=card_form.initial %}
+  <form method="post" enctype="multipart/form-data" id="new_card" style="display: none">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table>
+      {% for field in card_form %}
+      <tr>
+          <td>
+            <b>{{ field.label }}:</b> {{ field }}
+          </td>
+        </tr>
+      {% endfor %}
+      {% for field in attr_form %}
+        <tr>
+          <td>
+            <b>{{ field.label }}:</b> {{ field }}
+            {% if not field.field.widget.attrs.is_uniq %}
+              <button type="button" onclick="addNewElement(this)">+</button>
+              <button type="button" onclick="delElement(this)">-</button>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+     <input type="submit" value="Создать запись" class="btn btn-primary">
+  </form>
+
+  {% if card_form.is_valid %}
+    <h3>Запись сохранена: {{ data.id }}</h3>
+  {% endif %}
+
+{% endwith %}
