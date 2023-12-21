@@ -70,17 +70,16 @@ class CardAttributeQuerySet(models.QuerySet):
 
 class CardAttribute(models.Model):
     attribute = models.ForeignKey(
-        Attribute, on_delete=models.CASCADE, verbose_name='Атрибут',
-        related_name='card_attrs'
+        Attribute, on_delete=models.CASCADE, verbose_name='Атрибут'
     )
     card = models.ForeignKey(
-        Card, on_delete=models.CASCADE, verbose_name='Карточка',
-        related_name='card_attrs'
+        Card, on_delete=models.CASCADE, verbose_name='Карточка'
     )
     value = models.TextField('Значение')
     objects = CardAttributeQuerySet.as_manager()
 
     class Meta:
+        default_related_name = 'card_attrs'
         verbose_name = 'значение атрибута'
         verbose_name_plural = 'Значения атрибутов'
 

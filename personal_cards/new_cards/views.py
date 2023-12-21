@@ -1,6 +1,7 @@
 import base64
 import os
 import uuid
+from itertools import chain
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -167,11 +168,20 @@ def card_edit(request, card_id):
         request.POST or None, request.FILES or None, instance=card)
     context['form'] = card_form
 
-    attrs = card.card_attrs.add_attrs_annotations().exclude(
-        attr_type__in=FILE_FIELDS)
+    card_attrs_before = card.card_attrs.add_attrs_annotations()
+    clean_field_for_form = Attribute.objects.exclude(
+        Q(field_name__in=card_attrs_before) |
+        Q(attr_type__type_name__in=FILE_FIELDS)
+    )
+
     attr_form = DynamicFormCreator(
-        request.POST or None, request.FILES or None, extra=attrs)
-    context['attr'] = attr_form
+        request.POST or None, request.FILES or None,
+        extra=list(chain(
+            clean_field_for_form,
+            card_attrs_before))
+    )
+
+    context['attr'] = card_attrs_before
     if request.method == 'POST':
         if card_form.is_valid() and attr_form.is_valid():
             for key, value in card_form.cleaned_data.items():
