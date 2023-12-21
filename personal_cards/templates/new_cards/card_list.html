@@ -21,6 +21,7 @@
 {% include "includes/paginator.html" %}
 
 <div class="row">
+
   {% for obj in page_obj %}
       <div>
         <a href="{% url 'new_cards:card_info' obj.id %}">

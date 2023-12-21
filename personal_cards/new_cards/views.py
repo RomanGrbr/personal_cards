@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
 from .apps import NewCardsConfig
-from .forms import FORM_TYPES, CardForm, DynamicFormCreator
+from .forms import FORM_TYPES, CardForm, DynamicFormCreator, ImageAttributeForm
 from .models import Attribute, Card, CardAttribute
 
 FILE = 'file'
@@ -93,6 +93,8 @@ def index(request):
     context = dict()
 
     cards = Card.objects.all()
+    for card in cards:
+        print(card.avatar)
     # TODO Заменить фильтрацию
     if request.GET.get('q'):
         query = request.GET.get('q')
@@ -115,7 +117,6 @@ def index(request):
     if request.method == 'POST':
         if card_form.is_valid() and attr_form.is_valid():
             card = card_form.save()
-
             attrs_objects = Attribute.objects.prefetch_related('attr_type')
             attrs = []
             # Если поле есть в атрибутах, то валидируем и сохраняем
@@ -127,9 +128,7 @@ def index(request):
             attrs.extend(get_card_attr(
                 attrs=attrs_objects, card=card, data=request.FILES, file=True)
             )
-
             CardAttribute.objects.bulk_create(attrs)
-
             return redirect(CARD_LIST_URL)
     return render(request, CARD_LIST_TEMPLATE, context)
 
@@ -150,12 +149,10 @@ def card_info(request, card_id):
         for field, value in model_to_dict(card).items():
             if type(getattr(card, field)) in [ImageFieldFile, FileField]:
                 delete_file(value)
-
         attr_files = card.card_attrs.add_attrs_annotations().filter(
             attr_type__in=FILE_FIELDS)
         for file in attr_files:
             delete_file(file.value)
-
         card.delete()
         return redirect(CARD_LIST_URL)
     return render(request, CARD_INFO_TEMPLATE, context)
@@ -196,3 +193,47 @@ def card_edit(request, card_id):
             CardAttribute.objects.bulk_create(attrs)
         return redirect(CARD_INFO_URL, card_id=card.id)
     return render(request, CARD_EDIT_TEMPLATE, context)
+
+
+def update_files(data):
+    """Обновить словарь изображений"""
+    return [
+        {'pk': data.id,
+         'url': f'{settings.MEDIA_URL}/{data.value}'}
+        for data in data
+    ]
+
+
+@require_http_methods(['GET', 'POST'])
+def card_gallery(request, card_id):
+
+    template = 'new_cards/gallery.html'
+    context = {}
+    card = get_object_or_404(Card, pk=card_id)
+    extra = card.card_attrs.add_attrs_annotations().filter(attr_type=IMAGE)
+    add_form = ImageAttributeForm(request.POST or None, request.FILES or None)
+    context['form'] = add_form
+    context['card'] = card.id
+    context['files'] = update_files(extra)
+    if request.method == 'POST':
+        if add_form.is_valid():
+            file_type_attr = get_object_or_404(
+                Attribute, attr_type__type_name=IMAGE)
+            files = []
+            for file in request.FILES.getlist('files'):
+                files.append(CardAttribute(
+                    attribute=file_type_attr,
+                    card=card,
+                    value=save_image(file_type_attr.attr_type.type_name, file)
+                ))
+            CardAttribute.objects.bulk_create(files)
+        if 'del_file' in request.POST:
+            attr_id = request.POST.get('del_file')
+            attr = get_object_or_404(CardAttribute, pk=attr_id)
+            delete_file(attr.value)
+            attr.delete()
+        extra = CardAttribute.objects.filter(
+            card=card, attribute__attr_type__type_name=IMAGE)
+        context.update({'files': update_files(extra)})
+        return render(request, template, context)
+    return render(request, template, context)

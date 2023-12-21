@@ -5,7 +5,7 @@
 {% block content %}
   {% with data=form.initial %}
 
-<a href="#">Галерея</a>
+<a href="{% url 'new_cards:card_gallery' data.id %}">Галерея</a>
 <a href="#">Видео</a>
 <a href="#">Аудио</a><br>
 

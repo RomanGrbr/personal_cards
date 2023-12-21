@@ -27,6 +27,16 @@ FORM_TYPES = {
 }
 
 
+class ImageAttributeForm(forms.Form):
+    files = forms.ImageField(label='Изображение', required=False)
+    files.widget.attrs['multiple'] = True
+
+
+class FileAttributeForm(forms.Form):
+    files = forms.FileField(label='Файл', required=False)
+    files.widget.attrs['multiple'] = True
+
+
 class CardForm(forms.ModelForm):
     class Meta:
         model = Card

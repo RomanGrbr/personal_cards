@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if '/gallery/' in request.path %}
+    Галерея персональной карточки
+{% else %}
+    Аудиозаписи персональной карточки
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div>
+      <a href="{% url 'new_cards:card_info' card %}">Назад</a>
+    </div><br>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <div><br>
+         <input type="submit" value="Добавить" class="btn btn-primary">
+    </div>
+  </form><br>
+
+  <form method="post">
+    {% csrf_token %}
+      {% for file in files %}
+        {% if '/gallery/' in request.path %}
+          <img src="{{ file.url }}" width="100px">
+
+        {% endif %}
+      <div>
+        <button type="submit" name="del_file" value="{{ file.pk }}">-</button>
+      </div>
+    {% endfor %}
+  </form>
+
+{% endblock %}
