@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import ValidationError
 
 from .models import Card, Attribute
 
@@ -26,34 +27,37 @@ FORM_TYPES = {
 }
 
 
-class ItemsForm(forms.Form):
-    pass
-
-
-def dynamic_form_creator():
-    """Создает форму с полями соответсвующих типов.
-    На основе записей имен и типов полей в моедели Attribute
-
-    """
-    attr_fields = dict()
-    for atr in Attribute.objects.prefetch_related('attr_type'):
-        if atr.attr_type.type_name in FORM_TYPES:
-            attr_fields[atr.field_name] = FORM_TYPES[atr.attr_type.type_name](
-                label=atr.label,
-                help_text=atr.help_text,
-                required=False,
-                initial=getattr(atr, 'value', None)
-            )
-            attr_fields[atr.field_name].widget.attrs[
-                'is_uniq'
-            ] = 'true' if atr.is_uniq else None
-    return type('DynamicItemsForm', (ItemsForm,), attr_fields)
-
-
-DynamicAttrForm = dynamic_form_creator()
-
-
 class CardForm(forms.ModelForm):
     class Meta:
         model = Card
         fields = '__all__'
+
+
+class DynamicFormCreator(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        extra = kwargs.pop('extra')
+        super(DynamicFormCreator, self).__init__(*args, **kwargs)
+        for n, field in enumerate(extra):
+            try:
+                self.fields[f'{n}_custom_{field.field_name}'] = FORM_TYPES[
+                    str(field.attr_type)
+                ](
+                    label=field.label,
+                    help_text=field.help_text,
+                    required=False,
+                    initial=getattr(field, 'value', None)
+                )
+            except KeyError:
+                raise ValidationError(
+                    '{} - {}'.format(
+                        'Недопустимый тип поля', field.attr_type))
+            except Exception as err:
+                raise ValidationError(
+                    '{} - {}'.format(
+                        'Ошибка связанная с ', err))
+            self.fields[f'{n}_custom_{field.field_name}'].widget.attrs['is_uniq'] = str(
+                getattr(field, 'is_uniq')).lower
+            self.fields[f'{n}_custom_{field.field_name}'].widget.attrs['attr_type'] = str(
+                getattr(field, 'attr_type'))
+            self.fields[f'{n}_custom_{field.field_name}'].widget.attrs['multiple'] = True

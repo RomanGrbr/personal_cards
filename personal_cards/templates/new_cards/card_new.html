@@ -16,7 +16,7 @@
         <tr>
           <td>
             <b>{{ field.label }}:</b> {{ field }}
-            {% if not field.field.widget.attrs.is_uniq %}
+            {% if field.field.widget.attrs.is_uniq == 'false' %}
               <button type="button" onclick="addNewElement(this)">+</button>
               <button type="button" onclick="delElement(this)">-</button>
             {% endif %}

@@ -4,9 +4,8 @@ MAX_LENGTH = 100
 
 
 class AttributeType(models.Model):
-    type_name = models.CharField(
-        'Тип атрибута (forms.fields)', max_length=MAX_LENGTH, unique=True
-    )
+    type_name = models.SlugField(
+        'Тип атрибута (text, integer, file...)', unique=True)
 
     class Meta:
         ordering = ('type_name',)
@@ -18,8 +17,7 @@ class AttributeType(models.Model):
 
 
 class Attribute(models.Model):
-    field_name = models.CharField(
-        'Имя поля', max_length=MAX_LENGTH, unique=True)
+    field_name = models.SlugField('Имя поля', unique=True)
     attr_type = models.ForeignKey(
         AttributeType, on_delete=models.PROTECT, related_name='attributes',
         verbose_name='Тип атрибута (поля)'
@@ -41,8 +39,10 @@ class Attribute(models.Model):
 
 # TODO Эту модель можно изменить
 class Card(models.Model):
-    first_name = models.CharField('Имя', max_length=MAX_LENGTH)
-    last_name = models.CharField('Фамилия', max_length=MAX_LENGTH)
+    first_name = models.CharField(
+        'Имя', max_length=MAX_LENGTH, db_index=True)
+    last_name = models.CharField(
+        'Фамилия', max_length=MAX_LENGTH, db_index=True)
     avatar = models.ImageField(
         'Аватарка', upload_to='avatar/')
 

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Редактирование карточки
+{% endblock %}
+
+{% block content %}
+  <br>
+  {% with data=form.initial %}
+  <div>
+    <a href="{% url 'new_cards:card_info' data.id %}">Назад</a>
+  </div>
+
+  <h3>Редактировать {{ data.id }}</h3>
+
+  <form method="post" enctype="multipart/form-data" id="card_edit">
+  {% csrf_token %}
+  {{ formset.management_form }}
+    <table>
+      {% for field in form %}
+      <tr>
+          <td>
+            <b>{{ field.label }}:</b> {{ field }}<br>
+          </td>
+        </tr>
+      {% endfor %}
+      {% for field in attr %}
+      <tr>
+        <td>
+          <b>{{ field.label }}:</b> {{ field }}
+          {% if field.field.widget.attrs.is_uniq == 'false' %}
+            <button type="button" onclick="addNewElement(this)">+</button>
+            <button type="button" onclick="delElement(this)">-</button>
+          {% endif %}
+        </td>
+       </tr>
+      {% endfor %}
+
+    </table>
+    <input type="submit" value="Сохранить изменения" class="btn btn-primary">
+  </form>
+
+  {% if form.is_valid %}
+    <h3>Запись отредактирована</h3>
+  {% endif %}
+
+  {% endwith %}
+{% endblock %}

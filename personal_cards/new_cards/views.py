@@ -1,32 +1,37 @@
 import base64
-import uuid
 import os
+import uuid
 
-from django.shortcuts import get_object_or_404, redirect, render
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
+from django.db.models import FileField, ImageField, Q
+from django.db.models.fields.files import FileField, ImageFieldFile
 from django.forms.models import model_to_dict
-from django.db.models.fields.files import ImageFieldFile, FileField
-from django.db.models import FileField, ImageField
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods
 
-
-from .models import Card, Attribute, CardAttribute
-from .forms import CardForm, DynamicAttrForm, FORM_TYPES
+from .apps import NewCardsConfig
+from .forms import FORM_TYPES, CardForm, DynamicFormCreator
+from .models import Attribute, Card, CardAttribute
 
 FILE = 'file'
 IMAGE = 'image'
 VIDEO = 'video'
 AUDIO = 'audio'
 FILE_FIELDS = [FILE, IMAGE, VIDEO, AUDIO]
+
+CARD_LIST_TEMPLATE = f'{NewCardsConfig.name}/card_list.html'
+CARD_LIST_URL = f'{NewCardsConfig.name}:card_list'
+CARD_INFO_TEMPLATE = f'{NewCardsConfig.name}/card_info.html'
+CARD_INFO_URL = f'{NewCardsConfig.name}:card_info'
+CARD_EDIT_TEMPLATE = f'{NewCardsConfig.name}/card_edit.html'
+
 PER_PAGE = 3
 
 
 # TODO Нужен универсальный метод сохранения не только изображений
-def save_image(folder, file):
+def save_image(folder: str, file) -> str:
     """Сохраняет изображение и возвращает путь с именем в uuid"""
     image_bytes = file.read()
     b_64img = str(base64.b64encode(image_bytes))
@@ -40,15 +45,52 @@ def save_image(folder, file):
 
 
 def delete_file(path: str) -> None:
+    """Удалить файл из директории"""
     try:
         os.remove(f'{settings.BASE_DIR}/{settings.MEDIA_URL}/{path}')
     except Exception as e:
         print(e)
 
 
+def extra_fields_data(data: dict) -> dict:
+    """Из словаря с именами полей с custom в словарь с полями field_name"""
+    clear_data = dict()
+    for field, values in dict(data).items():
+        for value in values:
+            if value:
+                name = field.split('_custom_')[-1]
+                if name not in clear_data:
+                    clear_data[name] = [value]
+                else:
+                    clear_data[name].append(value)
+    return clear_data
+
+
+def get_card_attr(attrs, card: Card, data: dict, file: bool = False) -> list:
+    """Сбор полученных атрибутов и валидация, возвращает список объектов"""
+    card_attrs = []
+    attr_form_data = extra_fields_data(data)
+    for attr in attrs:
+        if attr.field_name in attr_form_data:
+            for value in attr_form_data[attr.field_name]:
+                # Создается поле формы соответствующего типа для фалидации
+                field = FORM_TYPES[attr.attr_type.type_name]()
+                clean_value = field.clean(value)
+                # TODO Тут можно добавить дополнительную валидацию
+                card_attrs.append(
+                        CardAttribute(
+                            attribute=attr,
+                            card=card,
+                            value=(save_image(attr.attr_type, clean_value)
+                                   if file else clean_value)
+                        )
+                )
+    return card_attrs
+
+
+@require_http_methods(['GET', 'POST'])
 def index(request):
-    template = 'new_cards/card_list.html'
-    context = {}
+    context = dict()
 
     cards = Card.objects.all()
     # TODO Заменить фильтрацию
@@ -65,72 +107,45 @@ def index(request):
     card_form = CardForm(request.POST or None, request.FILES or None)
     context['form'] = card_form
 
-    attr_form = DynamicAttrForm(request.POST or None, request.FILES or None)
+    # DynamicAttrForm = dynamic_form_creator()
+    attrs = Attribute.objects.all()
+    attr_form = DynamicFormCreator(
+        request.POST or None, request.FILES or None, extra=attrs)
     context['attr'] = attr_form
     if request.method == 'POST':
         if card_form.is_valid() and attr_form.is_valid():
-            # Если полученное поле есть в основной модели, то сохраняем
-            card = Card()
-            for field in card._meta.get_fields():
-                if field.name in card_form.cleaned_data:
-                    setattr(card, field.name,
-                            card_form.cleaned_data.get(field.name)
-                            )
-            card.save()
+            card = card_form.save()
 
             attrs_objects = Attribute.objects.prefetch_related('attr_type')
-            # Если поле есть в атрибутах, то валидируем и сохраняем
             attrs = []
-            for attr in attrs_objects:
-                if attr.field_name in attr_form.data:
-                    for value in dict(attr_form.data).get(attr.field_name):
-                        if value and attr_form.fields.get(attr.field_name).clean(value):
-                            # TODO Тут можно добавить дополнительную валидацию
-                            attrs.append(
-                                CardAttribute(
-                                    attribute=attr,
-                                    card=card,
-                                    value=value
-                                )
-                            )
-
+            # Если поле есть в атрибутах, то валидируем и сохраняем
+            attrs.extend(get_card_attr(
+                attrs=attrs_objects, card=card, data=attr_form.data)
+            )
             # Если поле есть в атрибутах, то сохраняем файл в директорию
             # соответствующую типу атрибута, путь сохраняем в атрибут
-            for attr in attrs_objects:
-                if attr.field_name in dict(request.FILES):
-                    values = dict(request.FILES).get(attr.field_name)
-                    # TODO Тут можно добавить дополнительную валидацию
-                    for value in values:
-                        folder = save_image(attr.attr_type, value)
-                        attrs.append(
-                            CardAttribute(
-                                attribute=attr,
-                                card=card,
-                                value=folder
-                            )
-                        )
+            attrs.extend(get_card_attr(
+                attrs=attrs_objects, card=card, data=request.FILES, file=True)
+            )
+
             CardAttribute.objects.bulk_create(attrs)
 
-            return redirect('new_cards:list')
-    return render(request, template, context)
+            return redirect(CARD_LIST_URL)
+    return render(request, CARD_LIST_TEMPLATE, context)
 
 
+@require_http_methods(['GET', 'POST'])
 def card_info(request, card_id):
-    """Детальная информация записи"""
-    template = 'new_cards/card_info.html'
-    context = {}
+    """Детальная информация записи или удаление"""
+    context = dict()
     card = get_object_or_404(Card, pk=card_id)
-    context['form'] = CardForm(initial=model_to_dict(card))
+    context['form'] = CardForm(instance=card)
 
-    context['attrs'] = card.card_attrs.add_attrs_annotations().exclude(
+    attrs = card.card_attrs.add_attrs_annotations().exclude(
         attr_type__in=FILE_FIELDS)
-    # context['images'] = card.card_attrs.add_attrs_annotations().fillter(
-    #     attr_type__in=IMAGE)
-    # context['videos'] = card.card_attrs.add_attrs_annotations().fillter(
-    #     attr_type__in=VIDEO)
-    # context['audios'] = card.card_attrs.add_attrs_annotations().fillter(
-    #     attr_type__in=AUDIO)
-
+    attr_form = DynamicFormCreator(
+        request.POST or None, request.FILES or None, extra=attrs)
+    context['attrs'] = attr_form
     if request.method == 'POST':
         for field, value in model_to_dict(card).items():
             if type(getattr(card, field)) in [ImageFieldFile, FileField]:
@@ -142,5 +157,42 @@ def card_info(request, card_id):
             delete_file(file.value)
 
         card.delete()
-        return redirect('new_cards:list')
-    return render(request, template, context)
+        return redirect(CARD_LIST_URL)
+    return render(request, CARD_INFO_TEMPLATE, context)
+
+
+@require_http_methods(['GET', 'POST'])
+def card_edit(request, card_id):
+    context = dict()
+
+    card = get_object_or_404(Card, pk=card_id)
+    card_form = CardForm(
+        request.POST or None, request.FILES or None, instance=card)
+    context['form'] = card_form
+
+    attrs = card.card_attrs.add_attrs_annotations().exclude(
+        attr_type__in=FILE_FIELDS)
+    attr_form = DynamicFormCreator(
+        request.POST or None, request.FILES or None, extra=attrs)
+    context['attr'] = attr_form
+    if request.method == 'POST':
+        if card_form.is_valid() and attr_form.is_valid():
+            for key, value in card_form.cleaned_data.items():
+                if type(value) in [FileField, ImageFieldFile]:
+                    delete_file(value)
+            card = card_form.save()
+            # Удалить все стыре файлы
+            attr_files = card.card_attrs.add_attrs_annotations().filter(
+                attr_type__in=FILE_FIELDS)
+            for file in attr_files:
+                delete_file(file.value)
+            # Удалить все старые атрибуты
+            for attr in card.card_attrs.add_attrs_annotations():
+                attr.delete()
+            # Записать новые атрибуты
+            attrs_objects = Attribute.objects.prefetch_related('attr_type')
+            attrs = get_card_attr(
+                attrs=attrs_objects, card=card, data=attr_form.data)
+            CardAttribute.objects.bulk_create(attrs)
+        return redirect(CARD_INFO_URL, card_id=card.id)
+    return render(request, CARD_EDIT_TEMPLATE, context)

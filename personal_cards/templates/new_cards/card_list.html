@@ -11,7 +11,7 @@
         {% include "new_cards/card_new.html" %}
     </div>
     <div class="col-4">
-        <form action="{% url 'new_cards:list' %}" method="get">
+        <form action="{% url 'new_cards:card_list' %}" method="get">
           <input name="q" type="text" placeholder="Search...">
             <input type="submit" value="Найти" class="btn btn-primary">
         </form>
