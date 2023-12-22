@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}
+  Данные карточки
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-6">
+      <nav class="navbar navbar-light" style="background-color: lightskyblue">
+  <div class="container">
+      <ul class="nav  nav-pills">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'new_cards:card_info' card.id %}">
+            Общая информация
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">
+            Социальные сети
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'new_cards:card_gallery' card.id %}">
+            Работа с медиафайлами
+          </a>
+      </ul>
+  </div>
+</nav>
+    {% block card %}
+    {% endblock %}
+    </div>
+
+    <div class="col-6">
+    {% block smi %}
+    {% endblock %}
+    </div>
+</div>
+{% endblock %}

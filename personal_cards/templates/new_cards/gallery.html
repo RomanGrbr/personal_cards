@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "new_cards/card.html" %}
 
 {% block title %}
 {% if '/gallery/' in request.path %}
@@ -8,10 +8,8 @@
 {% endif %}
 {% endblock %}
 
-{% block content %}
-    <div>
-      <a href="{% url 'new_cards:card_info' card %}">Назад</a>
-    </div><br>
+{% block card %}
+
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form }}

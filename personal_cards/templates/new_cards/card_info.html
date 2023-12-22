@@ -1,13 +1,9 @@
-{% extends "base.html" %}
+{% extends "new_cards/card.html" %}
 {% block title %}
   Данные карточки
 {% endblock %}
-{% block content %}
-  {% with data=form.initial %}
-
-<a href="{% url 'new_cards:card_gallery' data.id %}">Галерея</a>
-<a href="#">Видео</a>
-<a href="#">Аудио</a><br>
+{% block card %}
+  {% with card=form.initial %}
 
 {% for field in form %}
   {% if field.value.url %}
@@ -43,7 +39,7 @@
   </div><br>
 </form>
 <div>
-  <a href="{% url 'new_cards:card_edit' data.id %}">Редактировать</a>
+  <a href="{% url 'new_cards:card_edit' card.id %}">Редактировать</a>
 </div>
   {% endwith %}
 {% endblock %}

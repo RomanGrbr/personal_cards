@@ -94,8 +94,6 @@ def index(request):
     context = dict()
 
     cards = Card.objects.all()
-    for card in cards:
-        print(card.avatar)
     # TODO Заменить фильтрацию
     if request.GET.get('q'):
         query = request.GET.get('q')
@@ -168,33 +166,27 @@ def card_edit(request, card_id):
         request.POST or None, request.FILES or None, instance=card)
     context['form'] = card_form
 
-    card_attrs_before = card.card_attrs.add_attrs_annotations()
+    extra = card.card_attrs.add_attrs_annotations().exclude(
+                attr_type__in=FILE_FIELDS)
+    card_attrs_before = [field.field_name for field in extra]
     clean_field_for_form = Attribute.objects.exclude(
         Q(field_name__in=card_attrs_before) |
         Q(attr_type__type_name__in=FILE_FIELDS)
     )
-
     attr_form = DynamicFormCreator(
         request.POST or None, request.FILES or None,
         extra=list(chain(
             clean_field_for_form,
-            card_attrs_before))
+            extra))
     )
 
-    context['attr'] = card_attrs_before
+    context['attr'] = attr_form
     if request.method == 'POST':
         if card_form.is_valid() and attr_form.is_valid():
-            for key, value in card_form.cleaned_data.items():
-                if type(value) in [FileField, ImageFieldFile]:
-                    delete_file(value)
             card = card_form.save()
-            # Удалить все стыре файлы
-            attr_files = card.card_attrs.add_attrs_annotations().filter(
-                attr_type__in=FILE_FIELDS)
-            for file in attr_files:
-                delete_file(file.value)
-            # Удалить все старые атрибуты
-            for attr in card.card_attrs.add_attrs_annotations():
+            # Удалить все старые атрибуты кроме файлов
+            for attr in card.card_attrs.add_attrs_annotations().exclude(
+                attr_type__in=FILE_FIELDS):
                 attr.delete()
             # Записать новые атрибуты
             attrs_objects = Attribute.objects.prefetch_related('attr_type')
@@ -223,7 +215,7 @@ def card_gallery(request, card_id):
     extra = card.card_attrs.add_attrs_annotations().filter(attr_type=IMAGE)
     add_form = ImageAttributeForm(request.POST or None, request.FILES or None)
     context['form'] = add_form
-    context['card'] = card.id
+    context['card'] = card
     context['files'] = update_files(extra)
     if request.method == 'POST':
         if add_form.is_valid():

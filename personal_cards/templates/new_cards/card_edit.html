@@ -1,17 +1,14 @@
-{% extends "base.html" %}
+{% extends "new_cards/card.html" %}
 
 {% block title %}
   Редактирование карточки
 {% endblock %}
 
-{% block content %}
+{% block card %}
   <br>
-  {% with data=form.initial %}
-  <div>
-    <a href="{% url 'new_cards:card_info' data.id %}">Назад</a>
-  </div>
+  {% with card=form.initial %}
 
-  <h3>Редактировать {{ data.id }}</h3>
+  <h3>Редактировать {{ card.id }}</h3>
 
   <form method="post" enctype="multipart/form-data" id="card_edit">
   {% csrf_token %}
