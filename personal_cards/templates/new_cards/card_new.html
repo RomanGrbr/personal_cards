@@ -1,6 +1,5 @@
 <button onclick="hideShow('card_new')">Новая карточка</button><br>
 
-{% with data=card_form.initial %}
   <form method="post" enctype="multipart/form-data" id="card_new" style="display: none">
     {% csrf_token %}
     {{ formset.management_form }}
@@ -30,5 +29,3 @@
   {% if form.is_valid %}
     <h3>Запись сохранена</h3>
   {% endif %}
-
-{% endwith %}

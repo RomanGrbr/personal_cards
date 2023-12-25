@@ -27,6 +27,8 @@ CARD_LIST_URL = f'{NewCardsConfig.name}:card_list'
 CARD_INFO_TEMPLATE = f'{NewCardsConfig.name}/card_info.html'
 CARD_INFO_URL = f'{NewCardsConfig.name}:card_info'
 CARD_EDIT_TEMPLATE = f'{NewCardsConfig.name}/card_edit.html'
+GALLERY_TEMPLATE = f'{NewCardsConfig.name}/gallery.html'
+SOCIAL_NETWORK_TEMPLATE = f'{NewCardsConfig.name}/social_network.html'
 
 PER_PAGE = 3
 
@@ -138,7 +140,7 @@ def card_info(request, card_id):
     context = dict()
     card = get_object_or_404(Card, pk=card_id)
     context['form'] = CardForm(instance=card)
-
+    context['card'] = card
     attrs = card.card_attrs.add_attrs_annotations().exclude(
         attr_type__in=FILE_FIELDS)
     attr_form = DynamicFormCreator(
@@ -160,8 +162,8 @@ def card_info(request, card_id):
 @require_http_methods(['GET', 'POST'])
 def card_edit(request, card_id):
     context = dict()
-
     card = get_object_or_404(Card, pk=card_id)
+    context['card'] = card
     card_form = CardForm(
         request.POST or None, request.FILES or None, instance=card)
     context['form'] = card_form
@@ -208,8 +210,6 @@ def update_files(data):
 
 @require_http_methods(['GET', 'POST'])
 def card_gallery(request, card_id):
-
-    template = 'new_cards/gallery.html'
     context = {}
     card = get_object_or_404(Card, pk=card_id)
     extra = card.card_attrs.add_attrs_annotations().filter(attr_type=IMAGE)
@@ -237,5 +237,12 @@ def card_gallery(request, card_id):
         extra = CardAttribute.objects.filter(
             card=card, attribute__attr_type__type_name=IMAGE)
         context.update({'files': update_files(extra)})
-        return render(request, template, context)
-    return render(request, template, context)
+        return render(request, GALLERY_TEMPLATE, context)
+    return render(request, GALLERY_TEMPLATE, context)
+
+
+def social_network(request, card_id):
+    context = {}
+    card = get_object_or_404(Card, pk=card_id)
+    context['card'] = card
+    return render(request, SOCIAL_NETWORK_TEMPLATE, context)

@@ -3,7 +3,6 @@
   Данные карточки
 {% endblock %}
 {% block card %}
-  {% with card=form.initial %}
 
 {% for field in form %}
   {% if field.value.url %}
@@ -41,5 +40,4 @@
 <div>
   <a href="{% url 'new_cards:card_edit' card.id %}">Редактировать</a>
 </div>
-  {% endwith %}
 {% endblock %}

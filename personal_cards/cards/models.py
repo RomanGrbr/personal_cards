@@ -60,7 +60,7 @@ class CardAttributeQuerySet(models.QuerySet):
         return self.select_related(
                     'attribute', 'attribute__attr_type'
                 ).annotate(
-                    field_name=F('attribute__field_name'),
+                    y=F('attribute__field_name'),
                     attr_type=F('attribute__attr_type__type_name'),
                     label=F('attribute__label'),
                     help_text=F('attribute__help_text'),

@@ -6,7 +6,6 @@
 
 {% block card %}
   <br>
-  {% with card=form.initial %}
 
   <h3>Редактировать {{ card.id }}</h3>
 
@@ -41,5 +40,4 @@
     <h3>Запись отредактирована</h3>
   {% endif %}
 
-  {% endwith %}
 {% endblock %}
