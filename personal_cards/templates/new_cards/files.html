@@ -1,0 +1,40 @@
+{% extends "new_cards/card.html" %}
+
+{% block title %}
+  {% if media == 'image' %}
+    Работа с изображениями
+  {% elif media == 'audio' %}
+    Работа с аудиозаписями
+  {% elif media == 'video' %}
+    Работа с видео
+  {% elif media == 'file' %}
+    Работа с файлами
+  {% endif %}
+{% endblock %}
+
+{% block card %}
+
+  {% include "includes/card_files_header.html" %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <div><br>
+         <input type="submit" value="Добавить" class="btn btn-primary">
+    </div>
+  </form><br>
+
+  <form method="post">
+    {% csrf_token %}
+    {% for file in files %}
+      {% if media == 'image' %}
+        <img src="{{ file.url }}" width="100px">
+      {% else %}
+        {{ file.url }}
+      {% endif %}
+        <div>
+          <button type="submit" name="del_file" value="{{ file.pk }}">-</button>
+        </div>
+    {% endfor %}
+  </form>
+
+{% endblock %}

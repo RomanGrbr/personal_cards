@@ -13,7 +13,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
 from .apps import NewCardsConfig
-from .forms import FORM_TYPES, CardForm, DynamicFormCreator, ImageAttributeForm
+from .forms import (FORM_TYPES, CardForm, DynamicFormCreator,
+                    ImageAttributeForm, FileAttributeForm)
 from .models import Attribute, Card, CardAttribute
 
 FILE = 'file'
@@ -27,7 +28,7 @@ CARD_LIST_URL = f'{NewCardsConfig.name}:card_list'
 CARD_INFO_TEMPLATE = f'{NewCardsConfig.name}/card_info.html'
 CARD_INFO_URL = f'{NewCardsConfig.name}:card_info'
 CARD_EDIT_TEMPLATE = f'{NewCardsConfig.name}/card_edit.html'
-GALLERY_TEMPLATE = f'{NewCardsConfig.name}/gallery.html'
+GALLERY_TEMPLATE = f'{NewCardsConfig.name}/files.html'
 SOCIAL_NETWORK_TEMPLATE = f'{NewCardsConfig.name}/social_network.html'
 
 PER_PAGE = 3
@@ -161,6 +162,7 @@ def card_info(request, card_id):
 
 @require_http_methods(['GET', 'POST'])
 def card_edit(request, card_id):
+    """Редактирование записи со связанными атрибутами"""
     context = dict()
     card = get_object_or_404(Card, pk=card_id)
     context['card'] = card
@@ -200,27 +202,33 @@ def card_edit(request, card_id):
 
 
 def update_files(data):
-    """Обновить словарь изображений"""
+    """Обновить словарь файлов"""
     return [
         {'pk': data.id,
-         'url': f'{settings.MEDIA_URL}/{data.value}'}
+         'url': f'{settings.MEDIA_URL}{data.value}'}
         for data in data
     ]
 
 
 @require_http_methods(['GET', 'POST'])
-def card_gallery(request, card_id):
+def card_files(request, card_id, media=IMAGE):
     context = {}
     card = get_object_or_404(Card, pk=card_id)
-    extra = card.card_attrs.add_attrs_annotations().filter(attr_type=IMAGE)
-    add_form = ImageAttributeForm(request.POST or None, request.FILES or None)
+    extra = card.card_attrs.add_attrs_annotations().filter(attr_type=media)
+    if media == IMAGE:
+        add_form = ImageAttributeForm(
+            request.POST or None, request.FILES or None)
+    else:
+        add_form = FileAttributeForm(
+            request.POST or None, request.FILES or None)
+    context['media'] = media
     context['form'] = add_form
     context['card'] = card
     context['files'] = update_files(extra)
     if request.method == 'POST':
         if add_form.is_valid():
             file_type_attr = get_object_or_404(
-                Attribute, attr_type__type_name=IMAGE)
+                Attribute, attr_type__type_name=media)
             files = []
             for file in request.FILES.getlist('files'):
                 files.append(CardAttribute(
@@ -241,6 +249,7 @@ def card_gallery(request, card_id):
     return render(request, GALLERY_TEMPLATE, context)
 
 
+@require_http_methods(['GET'])
 def social_network(request, card_id):
     context = {}
     card = get_object_or_404(Card, pk=card_id)
