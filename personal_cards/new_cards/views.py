@@ -211,7 +211,8 @@ def update_files(data):
 
 
 @require_http_methods(['GET', 'POST'])
-def card_files(request, card_id, media=IMAGE):
+def card_files(request, card_id: int, media: str = IMAGE):
+    """Отображение и редактирование файлов с учетом их типа"""
     context = {}
     card = get_object_or_404(Card, pk=card_id)
     extra = card.card_attrs.add_attrs_annotations().filter(attr_type=media)
@@ -243,7 +244,7 @@ def card_files(request, card_id, media=IMAGE):
             delete_file(attr.value)
             attr.delete()
         extra = CardAttribute.objects.filter(
-            card=card, attribute__attr_type__type_name=IMAGE)
+            card=card, attribute__attr_type__type_name=media)
         context.update({'files': update_files(extra)})
         return render(request, GALLERY_TEMPLATE, context)
     return render(request, GALLERY_TEMPLATE, context)

@@ -25,16 +25,18 @@
 
   <form method="post">
     {% csrf_token %}
-    {% for file in files %}
-      {% if media == 'image' %}
-        <img src="{{ file.url }}" width="100px">
-      {% else %}
-        {{ file.url }}
-      {% endif %}
+      {% for file in files %}
+        {% if media == 'image' %}
+          <img src="{{ file.url }}" width="100px">
+        {% elif media == 'audio' %}
+          {{ file.url }}
+        {% else %}
+          Файлы
+        {% endif %}
         <div>
           <button type="submit" name="del_file" value="{{ file.pk }}">-</button>
         </div>
-    {% endfor %}
+      {% endfor %}
   </form>
 
 {% endblock %}

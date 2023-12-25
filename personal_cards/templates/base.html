@@ -5,59 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <script type="text/javascript" scr="{% static 'css/bootstrap.min.js' %}"></script>
-    <script>
-      function exampleFilter(elem) {
-        switch (elem.nodeName.toUpperCase()) {
-          case 'INPUT':
-              return true;
-          default:
-              return false;
-        }
-      }
-
-      function getAllSiblings(elem, filter) {
-        var sibs = [];
-        elem = elem.parentNode.firstChild;
-
-        do {
-            if (elem.nodeType === 3) continue; // text node
-            if (!filter || filter(elem)) sibs.push(elem);
-        } while (elem = elem.nextSibling)
-        return sibs;
-      }
-
-      function delElement(e){
-        var element = getAllSiblings(e, exampleFilter)[0]
-        var td = element.parentNode
-        var tr = td.parentNode
-        tr.parentNode.removeChild(tr)
-      }
-
-      function addNewElement(e){
-        var element = getAllSiblings(e, exampleFilter)[0]
-        var td = element.parentNode
-        var tr = td.parentNode
-        var new_element = tr.cloneNode(true)
-        new_element.childNodes
-        tr.before(new_element)
-        console.log(new_element.lastChild)
-      }
-      function delImage(card, image){
-        const Http = new XMLHttpRequest();
-        const url='http://localhost:8000';
-        Http.open("POST", url);
-        Http.send();
-        console.log(Http.responseText)
-      }
-      function hideShow(id)
-      {
-        if(document.getElementById(id).style.display=="none")
-            document.getElementById(id).style.display="block";
-        else
-            document.getElementById(id).style.display="none";
-      }
-    </script>
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript"  src="{% static 'js/card.js' %}"></script>
     <title>
       {% block title %}ФПК{% endblock %}
     </title>
