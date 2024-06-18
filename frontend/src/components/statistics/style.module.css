@@ -1,0 +1,10 @@
+.statistics {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  border: 1px solid #eeeeee;
+  box-sizing: border-box;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: left;
+}

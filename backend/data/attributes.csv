@@ -1,0 +1,10 @@
+birthdate,date,Дата рождения,Укажите дату рождения,True
+livestyle,string,Образ жизни,Опишите образ жизни,False
+docs,file,Документы,Загрузите документы,False
+location,text,Локация,Укажите локацию,False
+move,video,Видео записи,Загрузите видео,False
+photo,image,Изображение,Загрузите изображение,False
+politic,text,Политические взгляды,Укажите политические взгляды,False
+religion,text,Религия,Укажите религию,False
+resume,string,Резюме,Комментарий к карточке,True
+voice,audio,Образец голоса,Загрузите аудио,False

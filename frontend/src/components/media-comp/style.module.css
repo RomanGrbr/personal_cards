@@ -1,0 +1,90 @@
+.media {
+  display: flex;
+  flex-direction: column;
+  max-width: 363px;
+  border: 1px solid #eeeeee;
+  box-sizing: border-box;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: left;
+}
+
+
+.card__image {
+  /*height: 240px;*/
+  width: 50%;
+  background-position: center;
+  background-size: cover;
+}
+
+.container {
+  flex-direction: row;
+  width: 100%;
+}
+
+.left {
+  width: 100%;
+}
+
+.form {
+  margin: 0 auto 50px;
+}
+
+.cardsInputs {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+}
+
+.cardsInput {
+  width: 230px;
+}
+
+.cardsNameInput {
+  margin-bottom: 20px;
+}
+
+.cardAdd {
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 30px;
+  padding-left: 230px;
+  text-decoration: underline;
+}
+
+.cardsAdded {
+  padding-left: 230px;
+  text-align: left;
+  display: inline;
+}
+
+.fileInput {
+  margin-bottom: 72px;
+}
+
+.button {
+  font-size: 18px;
+}
+
+.cardsAddedItem {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.cardsAddedItemRemove {
+  padding-left: 20px;
+  color: red;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 820px) {
+  .cardsInputs {
+    display: block;
+    text-align: left;
+  }
+
+  .cardAdd {
+    padding-left: 0px;
+  }
+}

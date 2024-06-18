@@ -1,0 +1,41 @@
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  max-width: 50%;
+  border: 1px solid #eeeeee;
+  box-sizing: border-box;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.card__image {
+ /* height: 240px;*/
+  width: 50%;
+  background-position: center;
+  background-size: cover;
+}
+
+.single-card__image {
+  object-fit: cover;
+  align-self: flex-start;
+  height: 300px;
+  width: 300px;
+  border-radius: 15px;
+  max-width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  border: 1px solid #eeeeee;
+  padding: 10px;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f8f8f8;
+}

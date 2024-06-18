@@ -1,0 +1,36 @@
+.cardList {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -3px;
+}
+
+.cardList > * {
+  flex: 1 0 calc(33.33% - 20px);
+  margin: 5px;
+}
+
+
+
+@media screen and (max-width: 860px) {
+  .cardList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 830px) {
+  .cardList {
+    grid-gap: 20px;
+  }
+}
+
+@media screen and (max-width: 770px) {
+  .cardList {
+    grid-gap: 10px;
+  }
+}
+
+@media screen and (max-width: 550px) {
+  .cardList {
+    grid-template-columns: 1fr;
+  }
+}

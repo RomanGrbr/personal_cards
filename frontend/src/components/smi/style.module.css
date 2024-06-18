@@ -1,0 +1,74 @@
+.smi {
+  display: flex;
+  flex-direction: column;
+  max-width: 928px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+  text-align: left;
+  margin-top: 8px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, .05);
+}
+
+.header {
+  background-color: #F7F7F7;
+  min-height: 47.5px;
+  padding: 0.75rem 1.25rem;
+}
+.body {
+  background-color: white;
+  padding: 1.4rem;
+  display: flex;
+}
+.title {
+  font-size: 1.4rem;
+  color: #0f7864;
+
+}
+.text_muted {
+  color: #95A5A6;
+}
+
+/*.searched_word {
+  background-color: yellow; !* Устанавливает фоновый цвет текста в жёлтый *!
+  font-weight: bold; !* Опционально: делает текст жирным *!
+}*/
+
+/*.smi div {
+  margin-bottom: 0.5em;
+}*/
+
+.link {
+  color: #0099cc;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: #006699;
+}
+
+.loader {
+  border: 16px solid #f3f3f3; /* Светло-серый */
+  border-top: 16px solid #3498db; /* Синий */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+  margin: 40%;
+}
+
+.card__image {
+  /* height: 240px; */
+  width: 100%;
+  background-position: center;
+  background-size: cover;
+  max-width: 300px;
+  margin-right: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+

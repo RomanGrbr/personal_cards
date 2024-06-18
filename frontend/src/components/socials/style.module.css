@@ -1,0 +1,111 @@
+.socials {
+  display: flex;
+  flex-direction: column;
+  max-width: 363px;
+  border: 1px solid #eeeeee;
+  box-sizing: border-box;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.container {
+  /* display: flex; */
+  /* align-items: center; */
+  flex-direction: row;
+  width: 100%;
+}
+
+.card__image {
+  height: 240px;
+  width: 50%;
+  background-position: center;
+  background-size: cover;
+}
+
+
+
+/*table {
+  width: 75%;
+  border-collapse: collapse;
+  margin: 0 auto; !* Центрирует таблицу горизонтально *!
+  color: #34495e; !* Цвет текста *!
+  border: 1px solid #34495e; !* Окантовка вокруг всей таблицы *!
+  margin-top: 7px;
+}
+
+table th, td {
+  padding: 7px; !* Уменьшен размер отступа для уменьшения высоты строк *!
+  text-align: left;
+}
+
+table th {
+  background-color: #e74c3c; !* Красный цвет фона для заголовков *!
+  color: #ffffff; !* Белый цвет текста в заголовках *!
+  border-bottom: 3px solid #999; !* Добавляет толстую черную границу под заголовками *!
+}
+
+table td {
+  border-bottom: 1px solid #cccccc; !* Добавляет тонкую серую границу под каждой строкой, кроме последней *!
+}
+
+table tr:last-child td {
+  border-bottom: none; !* Убирает границу у последней строки *!
+}
+
+table tr:nth-child(even) {
+  background-color: #f7f7f7; !* Цвет фона для четных строк *!
+}
+
+!* Убраны стили для наведения *!*/
+
+.tableContainer {
+  display: flex;
+  margin-left: -30px;
+  border-radius: 8px;
+}
+
+table {
+  width: 70%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #34495e;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 15px rgba(0, 0, 0, .1);
+  margin-top: 7px;
+}
+
+.currentTable {
+  border-radius: 4px;
+}
+
+table:first-child {
+  width: auto;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 15px rgba(0, 0, 0, .1);
+  border-right: none;
+}
+
+table th, td {
+  padding: 7px;
+  text-align: left;
+}
+
+table th {
+  background-color: #e74c3c;
+  color: #ffffff;
+  border-bottom: 3px solid #999;
+}
+
+table td {
+  border-bottom: 1px solid #cccccc;
+}
+
+table tr:last-child td {
+  border-bottom: none;
+}
+
+table tr:nth-child(even) {
+  background-color: #f7f7f7;
+}
+

@@ -1,0 +1,16 @@
+number
+text
+string
+datetime-local
+date
+time
+week
+email
+file
+image
+video
+audio
+checkbox
+radio
+tel
+url

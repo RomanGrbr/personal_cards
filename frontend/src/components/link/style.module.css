@@ -1,0 +1,21 @@
+.link, .nav__link, .nav__link_active {
+  text-decoration: none;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.nav__link, .nav__link_active {
+  font-size: 15px;
+  color: inherit;
+  font-family: 'Roboto', sans-serif;
+}
+
+.nav__link_active, .nav__link:hover {
+  font-family: 'Roboto', sans-serif;
+  color: #18bc9c;
+}
+
+.container-for-links {
+  display: flex;
+  justify-content: center;
+}

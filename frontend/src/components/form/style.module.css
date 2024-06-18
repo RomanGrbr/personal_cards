@@ -1,0 +1,16 @@
+.form {
+  max-width: 770px;
+  background: #fff;
+  border: 1px solid #d9d4d4;
+  box-sizing: border-box;
+  box-shadow: 0 0 15px rgba(0, 0, 0, .05);
+  border-radius: 5px;
+  padding: 54px 100px 70px 68px;
+  margin-top: 8px;
+}
+
+@media screen and (max-width: 730px) {
+  .form {
+    padding: 20px;
+  }
+}
